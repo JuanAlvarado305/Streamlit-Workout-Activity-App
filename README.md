@@ -2,7 +2,7 @@
 
 ## Our Team
 
-David Zhou
+TODO: Replace with your team members
 
 ## How to run the streamlit app
 
@@ -66,15 +66,17 @@ name with your info. Your service name is the name of your webapp or project and
 be whatever you want!
 
 ```shell
-gcloud builds submit --tag gcr.io/PROJECT_ID/SERVICE_NAME
+PROJECT_ID=your-cloud-project-name
+SERVICE_NAME=your-team-service-name
+gcloud builds submit --tag gcr.io/${PROJECT_ID}/${SERVICE_NAME}
 ```
 
 3. Deploy the image that you just built. If successful, you should see a URL in the
 output on the command-line. Follow the link and you should see your app!
 
 ```shell
-gcloud run deploy SERVICE_NAME \
-    --image gcr.io/PROJECT_ID/SERVICE_NAME:latest \
+gcloud run deploy ${SERVICE_NAME} \
+    --image gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest \
     --region us-central1 \
     --allow-unauthenticated
 ```
@@ -89,17 +91,20 @@ file. Additional information on each step is in the [documentation](https://gith
 
 ```shell
 gcloud iam workload-identity-pools create "github" \
-    --project="PROJECT_ID" \
+    --project="${PROJECT_ID}" \
     --location="global" \
     --display-name="GitHub Actions Pool"
 
-gcloud iam workload-identity-pools providers create-oidc "project-repo" \
-    --project="PROJECT_ID" \
+OIDC_NAME=project-repo
+GITHUB_ORG=your-course-github-org
+
+gcloud iam workload-identity-pools providers create-oidc "${OIDC_NAME}" \
+    --project="${PROJECT_ID}" \
     --location="global" \
     --workload-identity-pool="github" \
     --display-name="My GitHub repo Provider" \
     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-    --attribute-condition="assertion.repository_owner == 'GITHUB_ORG'" \
+    --attribute-condition="assertion.repository_owner == '${GITHUB_ORG}'" \
     --issuer-uri="https://token.actions.githubusercontent.com"
 ```
 
@@ -108,8 +113,8 @@ You will use the output from this command as the `WORKLOAD_IDENTITY_PROVIDER`
 field in `.github/workflows/cloud-run.yml`.
 
 ```shell
-gcloud iam workload-identity-pools providers describe "project-repo" \
-    --project="PROJECT_ID" \
+gcloud iam workload-identity-pools providers describe "${OIDC_NAME}" \
+    --project="${PROJECT_ID}" \
     --location="global" \
     --workload-identity-pool="github" \
     --format="value(name)"
@@ -121,16 +126,22 @@ name as the `GITHUB_REPO_NAME`. Also replace `GITHUB_ORG` with the name of the G
 
 ```shell
 gcloud iam workload-identity-pools describe "github" \
-  --project="PROJECT_ID" \
+  --project="${PROJECT_ID}" \
   --location="global" \
   --format="value(name)"
+
+WORKLOAD_IDENTITY_POOL_ID=paste-output-from-prev-command
 ```
 
 ```shell
-gcloud iam service-accounts add-iam-policy-binding "PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
-  --project="PROJECT_ID" \
+PROJECT_NUMBER=yourcloudprojectnumber
+TEAM_NAME=your-github-team-name
+GITHUB_REPO_NAME=your-github-team-repo-name
+
+gcloud iam service-accounts add-iam-policy-binding "${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --project="${PROJECT_ID}" \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/WORKLOAD_IDENTITY_POOL_ID/attribute.repository/GITHUB_ORG/GITHUB_REPO_NAME"
+  --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${GITHUB_ORG}/${TEAM_NAME}/${GITHUB_REPO_NAME}"
 ```
 
 4. In IAM in the Cloud Console, double check that the following roles are attached 
