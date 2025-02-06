@@ -1,4 +1,4 @@
-# TODO: Replace with your team name
+# Spaghetti Crew
 
 ## Our Team
 
