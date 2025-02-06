@@ -2,7 +2,7 @@
 
 ## Our Team
 
-David Zhou
+Loie White
 
 ## How to run the streamlit app
 
