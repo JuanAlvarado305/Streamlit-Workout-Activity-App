@@ -4,17 +4,16 @@ name: Cloud Run Continuous Deployment
 
 on:
   push:
-    # TODO: change 'none' to 'main' to enable the workflow to run
-    branches: 'none'
+    branches: 'main'
   release:
     types: [published]
 
 env:
-  PROJECT_ID: '' # TODO: update to your Google Cloud project ID
-  SERVICE_NAME: '' # TODO: update to your service name
+  PROJECT_ID: 'roberttechx25'
+  SERVICE_NAME: 'spaghetti-crew'
   SERVICE_REGION: 'us-central1'
-  SERVICE_ACCOUNT: '' # TODO: update to your github service account
-  WORKLOAD_IDENTITY_PROVIDER: '' #TODO: update to your workload identity provider
+  SERVICE_ACCOUNT: '240152538865-compute@developer.gserviceaccount.com'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/240152538865/locations/global/workloadIdentityPools/github/providers/section-b2-spaghetti-crew'
 
 jobs:
   py-checks:
