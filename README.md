@@ -2,7 +2,7 @@
 
 ## Our Team
 
-TODO: Replace with your team members
+Jonael J Garcia Rivera
 
 ## How to run the streamlit app
 
