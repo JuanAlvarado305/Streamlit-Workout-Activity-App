@@ -4,6 +4,7 @@
 
 Jonael J Garcia Rivera
 Loie White
+Juan Alvarado
 
 ## How to run the streamlit app
 
