@@ -5,6 +5,7 @@
 Jonael J Garcia Rivera
 Loie White
 Juan Alvarado
+Foluso Onatemowo
 
 ## How to run the streamlit app
 
