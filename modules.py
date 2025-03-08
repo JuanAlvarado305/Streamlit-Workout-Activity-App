@@ -45,5 +45,22 @@ def display_recent_workouts(workouts_list):
 
 
 def display_genai_advice(timestamp, content, image):
-    """Write a good docstring here."""
-    pass
+    """
+    Creates and displays a motivational advice component using the provided data.
+
+    This function constructs a data dictionary containing a timestamp, motivational
+    content, and an associated image. It then calls the create_component function with
+    this data and a predefined HTML template name to render the advice component.
+
+    Parameters:
+        timestamp (str or datetime): The time when the advice was generated.
+        content (str): The motivational advice text to be displayed.
+        image (str): The URL or file path of the image associated with the advice.
+    """
+    data = {
+        'TIME': timestamp,
+        'CONTENT': content,
+        'IMAGE': image ,
+    }
+    html_file_name = "genai_advice_module"
+    create_component(data, html_file_name)
