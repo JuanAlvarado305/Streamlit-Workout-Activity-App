@@ -32,7 +32,7 @@ class TestDisplayActivitySummary(unittest.TestCase):
 class TestDisplayGenAiAdvice(unittest.TestCase):
     """Tests the display_genai_advice function."""
 
-    @patch('__main__.create_component')
+    @patch('modules.create_component')
     def test_valid_input(self, mock_create_component):
         """Tests display_genai_advice with valid input data."""
         timestamp = '2024-01-01 00:00:00'
@@ -48,7 +48,7 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         display_genai_advice(timestamp, content, image)
         mock_create_component.assert_called_once_with(expected_data, expected_html_file_name)
 
-    @patch('__main__.create_component')
+    @patch('modules.create_component')
     def test_none_image(self, mock_create_component):
         """Tests display_genai_advice when image is None."""
         timestamp = '2024-01-01 12:00:00'
@@ -64,7 +64,7 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         display_genai_advice(timestamp, content, image)
         mock_create_component.assert_called_once_with(expected_data, expected_html_file_name)
 
-    @patch('__main__.create_component')
+    @patch('modules.create_component')
     def test_empty_content(self, mock_create_component):
         """Tests display_genai_advice when content is an empty string."""
         timestamp = '2024-01-02 08:30:00'
@@ -80,7 +80,7 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         display_genai_advice(timestamp, content, image)
         mock_create_component.assert_called_once_with(expected_data, expected_html_file_name)
 
-    @patch('__main__.create_component')
+    @patch('modules.create_component')
     def test_none_timestamp(self, mock_create_component):
         """Tests display_genai_advice when timestamp is None."""
         timestamp = None
