@@ -27,6 +27,7 @@ class TestDisplayActivitySummary(unittest.TestCase):
     @patch('modules.create_component')
     def test_empty_workouts_list(self, mock_create_component):
         """Tests that the function handles an empty workouts list correctly."""
+        
         empty_workouts = []
         display_activity_summary(empty_workouts)
         
@@ -70,6 +71,9 @@ class TestDisplayActivitySummary(unittest.TestCase):
         
         # Check that the activity row contains the date
         self.assertIn('2024-01-01', args[0]['ACTIVITY_ROWS'])
+
+
+    
 
     @patch('modules.create_component')
     def test_multiple_workouts(self, mock_create_component):
@@ -159,6 +163,8 @@ class TestDisplayActivitySummary(unittest.TestCase):
         # Verify that dates appear in descending order
         self.assertLess(idx_01_03, idx_01_02)
         self.assertLess(idx_01_02, idx_01_01)
+
+    
 
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
