@@ -11,16 +11,35 @@ from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get
 
 userId = 'user1'
 
-
 def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    # An example of displaying a custom component called "my_custom_component"
+    # Display a custom component example.
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
+    
+    # Display GenAI advice as part of the page.
+    motivate(userId)
 
 
-# This is the starting point for your app. You do not need to change these lines
+def motivate(userId):
+    """
+    Retrieves and displays motivational advice for a given user.
+
+    This function fetches motivational advice using the `get_genai_advice` function,
+    extracts the timestamp, content, and image from the result, and then displays the
+    advice with the `display_genai_advice` function.
+
+    Parameters:
+        userId (int or str): The identifier for the user for whom the motivational advice is retrieved.
+    """
+    result = get_genai_advice(userId)
+    timestamp = result['timestamp']
+    content = result['content']
+    image = result['image']
+    display_genai_advice(timestamp, content, image)
+
+
 if __name__ == '__main__':
     display_app_page()
