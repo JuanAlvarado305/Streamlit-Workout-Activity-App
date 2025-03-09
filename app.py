@@ -14,14 +14,30 @@ userId = 'user1'
 def display_app_page():
     """Displays the home page of the app."""
 
+    st.title('Welcome to the Spaghetti Crew Workout App!')
 
-    # Fetch user posts
-    user_posts = get_user_posts(userId)
+    # Fetch user data
     user_info = get_user_profile(userId)
-
-    # Display section title
+    user_posts = get_user_posts(userId)
+    user_workouts = get_user_workouts(userId)
+    
+    # Display activity summary section
+    st.header(f"Activity Summary for {user_info['full_name']}")
+    
+    # Add space before the component to ensure it's visible
+    st.write("###")  # This adds extra vertical space
+    
+    # Display the activity summary
+    display_activity_summary(user_workouts)
+    
+    # Add space after the component to prevent cutoff
+    st.write("###")  # This adds extra vertical space
+    
+    st.markdown("---")  # Add separator between sections
+    
+    # Display user posts section
     st.header("User Posts")
-
+    
     # Loop through posts and display them
     for post in user_posts:
         display_post(
@@ -57,7 +73,6 @@ def motivate(userId):
     content = result['content']
     image = result['image']
     display_genai_advice(timestamp, content, image)
-
 
 
 if __name__ == '__main__':

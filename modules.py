@@ -115,8 +115,72 @@ def display_post(username, user_image, timestamp, content, post_image):
 
 
 def display_activity_summary(workouts_list):
-    """Write a good docstring here."""
-    pass
+    """Displays a summary of user workout activities.
+    
+    This component creates a visual summary showing total number of workouts,
+    total distance covered, total steps taken, total calories burned, and 
+    a list of recent workouts with their details.
+    
+    Args:
+        workouts_list: A list of dictionaries, where each dictionary contains
+            workout information with the following keys:
+            - 'start_timestamp': The start time of the workout.
+            - 'end_timestamp': The end time of the workout.
+            - 'distance': The distance covered in km.
+            - 'steps': The number of steps taken.
+            - 'calories_burned': The number of calories burned.
+            - 'start_lat_lng': The starting coordinates (latitude, longitude).
+            - 'end_lat_lng': The ending coordinates (latitude, longitude).
+    
+    Returns:
+        None. Renders the activity summary component in the Streamlit app.
+    """
+    # Calculate summary statistics
+    workout_count = len(workouts_list)
+    total_distance = sum(workout.get('distance', 0) for workout in workouts_list)
+    total_steps = sum(workout.get('steps', 0) for workout in workouts_list)
+    total_calories = sum(workout.get('calories_burned', 0) for workout in workouts_list)
+    
+    # Format the activity rows HTML
+    activity_rows = ""
+    # Sort workouts by start timestamp (most recent first)
+    sorted_workouts = sorted(workouts_list, 
+                             key=lambda x: x.get('start_timestamp', ''), 
+                             reverse=True)
+    
+    for workout in sorted_workouts:
+        # Extract the date part of the timestamp (assuming format "YYYY-MM-DD HH:MM:SS")
+        date = workout.get('start_timestamp', '').split(' ')[0] if workout.get('start_timestamp') else 'N/A'
+        
+        # Create a row for each workout
+        row_html = f'''
+        <div class="activity-row">
+            <span>{date}</span>
+            <span>{workout.get('distance', 0)} km</span>
+            <span>{workout.get('steps', 0)}</span>
+            <span>{workout.get('calories_burned', 0)}</span>
+        </div>
+        '''
+        activity_rows += row_html
+    
+    # Prepare data for the component
+    data = {
+        'WORKOUT_COUNT': workout_count,
+        'TOTAL_DISTANCE': round(total_distance, 1),
+        'TOTAL_STEPS': total_steps,
+        'TOTAL_CALORIES': total_calories,
+        'ACTIVITY_ROWS': activity_rows
+    }
+    
+    # Register and display the component with explicit height
+    html_file_name = "my_custom_component"
+    
+    # The explicit height ensures the component isn't cut off
+    # Adjust the height value based on how many workouts you're displaying
+    # Add about 100px + (40px × number of workout rows)
+    height = 350 + min(len(workouts_list) * 40, 400)  # Base height + row height with a reasonable max
+    
+    create_component(data, html_file_name, height=height)
 
 
 def display_genai_advice(timestamp, content, image):
