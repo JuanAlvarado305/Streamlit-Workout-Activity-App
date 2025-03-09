@@ -23,29 +23,22 @@ def display_app_page():
     
     # Display activity summary section
     st.header(f"Activity Summary for {user_info['full_name']}")
+    
+    # Add space before the component to ensure it's visible
+    st.write("###")  # This adds extra vertical space
+    
+    # Display the activity summary
     display_activity_summary(user_workouts)
+    
+    # Add space after the component to prevent cutoff
+    st.write("###")  # This adds extra vertical space
     
     st.markdown("---")  # Add separator between sections
     
     # Display user posts section
     st.header("User Posts")
     
-
-
-    ## The code below has no relation to my display_acitivtiy_summary and 
-    #  is used to display user posts 
-    # Loop through posts and display them
-    for post in user_posts:
-        display_post(
-            username = user_info["username"],
-            user_image = user_info["profile_image"],
-            timestamp = post["timestamp"],
-            content = post["content"],
-            post_image = "https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8",
-        )
-        st.markdown("---")  # Adds a separator between posts
-
-
+    
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
     display_app_page()

@@ -74,7 +74,7 @@ def display_activity_summary(workouts_list):
         
         # Create a row for each workout
         row_html = f'''
-        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef;">
+        <div class="activity-row">
             <span>{date}</span>
             <span>{workout.get('distance', 0)} km</span>
             <span>{workout.get('steps', 0)}</span>
@@ -92,9 +92,15 @@ def display_activity_summary(workouts_list):
         'ACTIVITY_ROWS': activity_rows
     }
     
-    # Register and display the component
+    # Register and display the component with explicit height
     html_file_name = "my_custom_component"
-    create_component(data, html_file_name)
+    
+    # The explicit height ensures the component isn't cut off
+    # Adjust the height value based on how many workouts you're displaying
+    # Add about 100px + (40px × number of workout rows)
+    height = 350 + min(len(workouts_list) * 40, 400)  # Base height + row height with a reasonable max
+    
+    create_component(data, html_file_name, height=height)
 
 
 def display_recent_workouts(workouts_list):
