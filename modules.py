@@ -7,31 +7,111 @@
 # function other than the example.
 #############################################################################
 
+import streamlit as st
+from html import escape
 from internals import create_component
+from datetime import datetime
 
 
-# This one has been written for you as an example. You may change it as wanted.
 def display_my_custom_component(value):
     """Displays a 'my custom component' which showcases an example of how custom
     components work.
 
     value: the name you'd like to be called by within the app
     """
-    # Define any templated data from your HTML file. The contents of
-    # 'value' will be inserted to the templated HTML file wherever '{{NAME}}'
-    # occurs. You can add as many variables as you want.
     data = {
         'NAME': value,
     }
-    # Register and display the component by providing the data and name
-    # of the HTML file. HTML must be placed inside the "custom_components" folder.
     html_file_name = "my_custom_component"
     create_component(data, html_file_name)
 
 
 def display_post(username, user_image, timestamp, content, post_image):
-    """Write a good docstring here."""
-    pass
+    """Displays a user post with an improved layout in Streamlit."""
+    """This function was created with the help of ChatGPT and Gemini"""
+
+    # Formated Timestamp
+    dt_object = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    formatted_time = dt_object.strftime("%d %b %Y, %H:%M")  # 08 Mar 2024, 14:30
+
+    # CSS
+    st.markdown(
+        """
+        <style>
+            .post-container {
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                padding: 15px;
+                background-color: white;
+                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+                width: 600px;
+                margin: auto;
+                font-family: sans-serif;
+            }
+            .profile-pic {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%; 
+                object-fit: cover;
+                margin-bottom: 10px;
+            }
+            .post-info {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 7px;
+            }
+            .post-content {
+                font-size: 14px;
+                margin-top: -5px;
+                line-height: 1.6;
+            }
+            .post-image {
+                width: 100%;
+                border-radius: 10px;
+                margin-top: 10px;
+            }
+            .post-info strong {
+                font-size: 16px;
+                margin-bottom: 0px;
+                padding-bottom: 0px;
+                line-height: 1;
+            }
+            .post-info span {
+                font-size: 12px;
+                color: #666;
+                line-height: 1;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # main container
+    with st.container():
+        # Header with name and profile picture
+        col1, col2 = st.columns([1, 11])
+
+        with col1:
+            st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
+
+        with col2:
+            st.markdown(
+                f"""
+                <div class="post-info">
+                    <strong>{username}</strong>
+                    <span>{formatted_time}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # Post Content
+        st.markdown(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
+
+        # Post Image (if exists)
+        if post_image:
+            st.image(post_image, use_container_width=True)
 
 
 def display_activity_summary(workouts_list):
@@ -103,11 +183,87 @@ def display_activity_summary(workouts_list):
     create_component(data, html_file_name, height=height)
 
 
-def display_recent_workouts(workouts_list):
-    """Write a good docstring here."""
-    pass
-
-
 def display_genai_advice(timestamp, content, image):
+    """
+    Creates and displays a motivational advice component using the provided data.
+    This function constructs an HTML snippet with embedded CSS and renders it
+    using Streamlit. It uses the given timestamp, content, and image URL.
+    
+    Parameters:
+        timestamp (str or datetime): The time when the advice was generated.
+        content (str): The motivational advice text to be displayed.
+        image (str): The URL or file path of the image associated with the advice.
+    """
+    # Format the timestamp if it is a string in the format "YYYY-MM-DD HH:MM:SS"
+    safe_timestamp_str = str(timestamp) if timestamp is not None else ""
+    try:
+        dt_object = datetime.strptime(safe_timestamp_str, "%Y-%m-%d %H:%M:%S")
+        safe_timestamp_str = dt_object.strftime("%d %b %Y, %H:%M")
+    except ValueError:
+        pass
+
+    # Escape content and the formatted timestamp to prevent HTML injection
+    safe_content = escape(str(content))
+    safe_timestamp = escape(safe_timestamp_str)
+
+    html_code = f"""
+    <style>
+        .custom-component-container {{
+            position: relative;
+            width: 100%;
+            max-width: 1800px;
+            height: 230px;
+            margin: 20px auto;
+            overflow: hidden;
+            border-radius: 35px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+
+        .image {{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(50%);
+        }}
+
+        .content {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            color: #fff;
+            font-weight: 700;
+            text-align: center;
+            z-index: 2;
+            margin: 0 20px;
+            line-height: 1.2;
+        }}
+
+        .time {{
+            position: absolute;
+            bottom: 13px;
+            right: 13px;
+            font-size: 14px;
+            color: #fff;
+            font-style: italic;
+            z-index: 2;
+        }}
+    </style>
+
+    <div class="custom-component-container">
+        <img class="image" src="{image}" alt="Motivation">
+        <p class="content">{safe_content}</p>
+        <p class="time">{safe_timestamp}</p>
+    </div>
+    """
+    st.markdown(html_code, unsafe_allow_html=True)
+
+
+def display_recent_workouts(workouts_list):
     """Write a good docstring here."""
     pass

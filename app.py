@@ -11,9 +11,9 @@ from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get
 
 userId = 'user1'
 
-
 def display_app_page():
     """Displays the home page of the app."""
+
     st.title('Welcome to the Spaghetti Crew Workout App!')
 
     # Fetch user data
@@ -38,7 +38,42 @@ def display_app_page():
     # Display user posts section
     st.header("User Posts")
     
+    # Loop through posts and display them
+    for post in user_posts:
+        display_post(
+            username = user_info["username"],
+            user_image = user_info["profile_image"],
+            timestamp = post["timestamp"],
+            content = post["content"],
+            post_image = "https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8",
+        )
+        st.markdown("---")  # Adds a separator between posts
+        
+    # Display a custom component example.
+    value = st.text_input('Enter your name')
+    display_my_custom_component(value)
     
-# This is the starting point for your app. You do not need to change these lines
+    # Display GenAI advice as part of the page.
+    motivate(userId)
+
+
+def motivate(userId):
+    """
+    Retrieves and displays motivational advice for a given user.
+
+    This function fetches motivational advice using the `get_genai_advice` function,
+    extracts the timestamp, content, and image from the result, and then displays the
+    advice with the `display_genai_advice` function.
+
+    Parameters:
+        userId (int or str): The identifier for the user for whom the motivational advice is retrieved.
+    """
+    result = get_genai_advice(userId)
+    timestamp = result['timestamp']
+    content = result['content']
+    image = result['image']
+    display_genai_advice(timestamp, content, image)
+
+
 if __name__ == '__main__':
     display_app_page()
