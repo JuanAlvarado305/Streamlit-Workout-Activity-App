@@ -93,7 +93,7 @@ def display_activity_summary(workouts_list):
     }
     
     # Register and display the component
-    html_file_name = "index"
+    html_file_name = "my_custom_component"
     create_component(data, html_file_name)
 
 
