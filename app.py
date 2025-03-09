@@ -14,11 +14,6 @@ userId = 'user1'
 
 def display_app_page():
     """Displays the home page of the app."""
-    #st.title('Welcome to SDS!')
-
-    # An example of displaying a custom component called "my_custom_component"
-    # value = st.text_input('Enter your name')
-    # display_my_custom_component(value)
 
     # Fetch user posts
     user_posts = get_user_posts(userId)

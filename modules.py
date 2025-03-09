@@ -34,6 +34,7 @@ def display_my_custom_component(value):
 
 def display_post(username, user_image, timestamp, content, post_image):
     """Displays a user post with an improved layout in Streamlit."""
+    """This function was created with the help of ChatGPT and Gemini"""
 
     # Formated Timestamp
     dt_object = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
