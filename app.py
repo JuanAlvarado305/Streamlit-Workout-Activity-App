@@ -13,8 +13,26 @@ userId = 'user1'
 
 def display_app_page():
     """Displays the home page of the app."""
-    st.title('Welcome to SDS!')
 
+
+    # Fetch user posts
+    user_posts = get_user_posts(userId)
+    user_info = get_user_profile(userId)
+
+    # Display section title
+    st.header("User Posts")
+
+    # Loop through posts and display them
+    for post in user_posts:
+        display_post(
+            username = user_info["username"],
+            user_image = user_info["profile_image"],
+            timestamp = post["timestamp"],
+            content = post["content"],
+            post_image = "https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8",
+        )
+        st.markdown("---")  # Adds a separator between posts
+        
     # Display a custom component example.
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
@@ -39,6 +57,7 @@ def motivate(userId):
     content = result['content']
     image = result['image']
     display_genai_advice(timestamp, content, image)
+
 
 
 if __name__ == '__main__':
