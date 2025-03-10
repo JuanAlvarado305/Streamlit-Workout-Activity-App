@@ -182,7 +182,6 @@ def display_activity_summary(workouts_list):
     
     create_component(data, html_file_name, height=height)
 
-
 def display_genai_advice(timestamp, content, image):
     """
     Creates and displays a motivational advice component using the provided data.
@@ -220,8 +219,8 @@ def display_genai_advice(timestamp, content, image):
             display: flex;
             justify-content: center;
             align-items: center;
+            background: linear-gradient(45deg, #024CAA, #00AEEF);
         }}
-
         .image {{
             position: absolute;
             width: 100%;
@@ -229,7 +228,6 @@ def display_genai_advice(timestamp, content, image):
             object-fit: cover;
             filter: brightness(50%);
         }}
-
         .content {{
             position: absolute;
             top: 50%;
@@ -243,7 +241,6 @@ def display_genai_advice(timestamp, content, image):
             margin: 0 20px;
             line-height: 1.2;
         }}
-
         .time {{
             position: absolute;
             bottom: 13px;
@@ -254,9 +251,8 @@ def display_genai_advice(timestamp, content, image):
             z-index: 2;
         }}
     </style>
-
     <div class="custom-component-container">
-        <img class="image" src="{image}" alt="Motivation">
+        <img class="image" src="{image}" alt="">
         <p class="content">{safe_content}</p>
         <p class="time">{safe_timestamp}</p>
     </div>

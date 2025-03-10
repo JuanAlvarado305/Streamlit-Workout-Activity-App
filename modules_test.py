@@ -254,19 +254,21 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
     @patch('modules.st.markdown')
     def test_none_image(self, mock_markdown):
-        """Tests display_genai_advice when image is None."""
+        """Tests display_genai_advice when image is None (nopage scenario)."""
         timestamp = '2024-01-01 12:00:00'
         content = 'Keep pushing!'
         image = None
         expected_safe_content = escape(str(content))
-        # Expected reformat: "01 Jan 2024, 12:00"
         expected_safe_timestamp = escape("01 Jan 2024, 12:00")
-
+        
         display_genai_advice(timestamp, content, image)
         html_output = mock_markdown.call_args[0][0]
+        
         self.assertIn(expected_safe_content, html_output)
         self.assertIn(expected_safe_timestamp, html_output)
-        self.assertIn("None", html_output)  # None converts to "None"
+        self.assertIn("background: linear-gradient(45deg, #024CAA, #00AEEF);", html_output)
+        # Since image is None, the f-string converts it to "None" in the src attribute.
+        self.assertIn('<img class="image" src="None" alt="">', html_output)
         mock_markdown.assert_called_once()
 
     @patch('modules.st.markdown')
@@ -555,17 +557,18 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         
         for call in calls:
             call_content = call[0][0]
-            if "30s" in call_content and not "m" in call_content:
+            # Check for the exact duration span for seconds-only workout
+            if '<span class="stat-value">30s</span>' in call_content:
                 seconds_only_found = True
-            elif "5m 30s" in call_content:
+            if "5m 30s" in call_content:
                 minutes_seconds_found = True
-            elif "1h 30m" in call_content:
+            if "1h 30m" in call_content:
                 hours_minutes_seconds_found = True
         
-        # Verify all duration formats were found
         self.assertTrue(seconds_only_found, "Seconds-only duration not formatted correctly")
         self.assertTrue(minutes_seconds_found, "Minutes and seconds duration not formatted correctly")
         self.assertTrue(hours_minutes_seconds_found, "Hours, minutes, and seconds duration not formatted correctly")
+
     
     @patch('modules.st.error')
     @patch('modules.st.markdown')
