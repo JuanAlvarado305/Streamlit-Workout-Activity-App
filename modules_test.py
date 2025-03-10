@@ -7,12 +7,8 @@
 #############################################################################
 
 import unittest
-from unittest.mock import patch, MagicMock
 from streamlit.testing.v1 import AppTest
-from html import escape
-from datetime import datetime
 from modules import display_post, display_activity_summary, display_genai_advice, display_recent_workouts
-from unittest.mock import patch, MagicMock
 
 # Write your tests below
 
@@ -599,6 +595,7 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         
         # Verify error is displayed
         mock_error.assert_called()
+
 
 if __name__ == "__main__":
     unittest.main()
