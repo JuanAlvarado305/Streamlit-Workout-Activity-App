@@ -407,9 +407,195 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
     """Tests the display_recent_workouts function."""
-    def test_foo(self):
-        """Tests foo."""
-        pass
+    
+    @patch('modules.st.write')
+    def test_empty_workouts_list(self, mock_write):
+        """Tests handling of an empty workouts list."""
+        empty_workouts = []
+        display_recent_workouts(empty_workouts)
+        
+        # Check that appropriate message is displayed
+        mock_write.assert_called_with("No recent workouts found.")
+    
+    @patch('modules.st.markdown')
+    @patch('modules.st.subheader')
+    def test_single_workout(self, mock_subheader, mock_markdown):
+        """Tests that a single workout is displayed correctly."""
+        single_workout = [{
+            'workout_id': 'workout1',
+            'start_timestamp': '2024-01-01 00:00:00',
+            'end_timestamp': '2024-01-01 00:30:00',
+            'distance': 5.5,
+            'steps': 6000,
+            'calories_burned': 250,
+            'start_lat_lng': (1.5, 4.5),
+            'end_lat_lng': (1.6, 4.6)
+        }]
+        
+        display_recent_workouts(single_workout)
+        
+        # Check that subheader is displayed
+        mock_subheader.assert_called_with("Recent Workouts")
+        
+        # Check that markdown is called with workout information
+        calls = mock_markdown.call_args_list
+        
+        # Find the call that contains workout information
+        workout_info_found = False
+        for call in calls:
+            call_content = call[0][0]
+            if "January 01, 2024" in call_content and "5.5 km" in call_content and "6,000" in call_content and "250" in call_content:
+                workout_info_found = True
+                break
+                
+        self.assertTrue(workout_info_found, "Workout information not properly displayed")
+    
+    @patch('modules.st.markdown')
+    @patch('modules.st.subheader')
+    def test_multiple_workouts(self, mock_subheader, mock_markdown):
+        """Tests that multiple workouts are displayed in the correct order."""
+        multiple_workouts = [
+            {
+                'workout_id': 'workout1',
+                'start_timestamp': '2024-01-01 00:00:00',
+                'end_timestamp': '2024-01-01 00:30:00',
+                'distance': 5.5,
+                'steps': 6000,
+                'calories_burned': 250,
+            },
+            {
+                'workout_id': 'workout2',
+                'start_timestamp': '2024-01-03 10:00:00',
+                'end_timestamp': '2024-01-03 11:00:00',
+                'distance': 8.0,
+                'steps': 9000,
+                'calories_burned': 400,
+            }
+        ]
+        
+        display_recent_workouts(multiple_workouts)
+        
+        # Check that subheader is displayed
+        mock_subheader.assert_called_once_with("Recent Workouts")
+        
+        # Get all markdown calls
+        calls = mock_markdown.call_args_list
+        
+        # Find content for each workout
+        workout1_content = None
+        workout2_content = None
+        
+        for call in calls:
+            call_content = call[0][0]
+            if "January 01, 2024" in call_content and "5.5 km" in call_content:
+                workout1_content = call_content
+            elif "January 03, 2024" in call_content and "8.0 km" in call_content:
+                workout2_content = call_content
+        
+        # Verify both workouts were displayed
+        self.assertIsNotNone(workout1_content, "First workout not displayed")
+        self.assertIsNotNone(workout2_content, "Second workout not displayed")
+        
+        # Find the index of each workout's content in the list of calls
+        # to verify they appear in the correct order (most recent first)
+        workout1_index = None
+        workout2_index = None
+        
+        for i, call in enumerate(calls):
+            call_content = call[0][0]
+            if "January 01, 2024" in call_content and "5.5 km" in call_content:
+                workout1_index = i
+            elif "January 03, 2024" in call_content and "8.0 km" in call_content:
+                workout2_index = i
+        
+        # Verify most recent workout appears first
+        self.assertLess(workout2_index, workout1_index, "Workouts not sorted correctly by date")
+    
+    @patch('modules.st.markdown')
+    @patch('modules.st.subheader')
+    def test_workout_duration_formatting(self, mock_subheader, mock_markdown):
+        """Tests that workout duration is formatted correctly for different time spans."""
+        # Test workouts with different durations
+        workouts = [
+            # Short duration (seconds only)
+            {
+                'start_timestamp': '2024-01-01 00:00:00',
+                'end_timestamp': '2024-01-01 00:00:30',
+                'distance': 0.1,
+                'steps': 100,
+                'calories_burned': 10,
+            },
+            # Minutes and seconds
+            {
+                'start_timestamp': '2024-01-02 00:00:00',
+                'end_timestamp': '2024-01-02 00:05:30',
+                'distance': 0.5,
+                'steps': 500,
+                'calories_burned': 50,
+            },
+            # Hours, minutes, and seconds
+            {
+                'start_timestamp': '2024-01-03 00:00:00',
+                'end_timestamp': '2024-01-03 01:30:45',
+                'distance': 10.0,
+                'steps': 12000,
+                'calories_burned': 600,
+            }
+        ]
+        
+        display_recent_workouts(workouts)
+        
+        # Check all markdown calls
+        calls = mock_markdown.call_args_list
+        
+        # Find each workout's content and verify the duration formatting
+        seconds_only_found = False
+        minutes_seconds_found = False
+        hours_minutes_seconds_found = False
+        
+        for call in calls:
+            call_content = call[0][0]
+            if "30s" in call_content and not "m" in call_content:
+                seconds_only_found = True
+            elif "5m 30s" in call_content:
+                minutes_seconds_found = True
+            elif "1h 30m" in call_content:
+                hours_minutes_seconds_found = True
+        
+        # Verify all duration formats were found
+        self.assertTrue(seconds_only_found, "Seconds-only duration not formatted correctly")
+        self.assertTrue(minutes_seconds_found, "Minutes and seconds duration not formatted correctly")
+        self.assertTrue(hours_minutes_seconds_found, "Hours, minutes, and seconds duration not formatted correctly")
+    
+    @patch('modules.st.error')
+    @patch('modules.st.markdown')
+    def test_error_handling(self, mock_markdown, mock_error):
+        """Tests error handling for invalid workout data."""
+        invalid_workouts = [
+            # Missing end_timestamp
+            {
+                'workout_id': 'workout1',
+                'start_timestamp': '2024-01-01 00:00:00',
+                # No end_timestamp
+                'distance': 5.5,
+                'steps': 6000,
+                'calories_burned': 250,
+            },
+            # Invalid timestamp format
+            {
+                'workout_id': 'workout2',
+                'start_timestamp': 'invalid-date',
+                'end_timestamp': '2024-01-03 11:00:00',
+                'distance': 8.0,
+                'steps': 9000,
+                'calories_burned': 400,
+            }
+        ]
+        
+        display_recent_workouts(invalid_workouts)
+        
+        # Verify error is displayed
+        mock_error.assert_called()
 
 if __name__ == "__main__":
     unittest.main()

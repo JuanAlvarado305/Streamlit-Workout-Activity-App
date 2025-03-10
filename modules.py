@@ -265,5 +265,126 @@ def display_genai_advice(timestamp, content, image):
 
 
 def display_recent_workouts(workouts_list):
-    """Write a good docstring here."""
-    pass
+    """Displays a list of recent workouts with detailed information.
+    
+    This function creates a visually appealing display of recent workouts 
+    with detailed information about each workout including date, duration,
+    distance, steps, and calories burned. The workouts are sorted by date
+    with the most recent first.
+    
+    Args:
+        workouts_list: A list of dictionaries, where each dictionary contains
+            workout information with the following keys:
+            - 'start_timestamp': The start time of the workout.
+            - 'end_timestamp': The end time of the workout.
+            - 'distance': The distance covered in km.
+            - 'steps': The number of steps taken.
+            - 'calories_burned': The number of calories burned.
+            - 'start_lat_lng': The starting coordinates (latitude, longitude).
+            - 'end_lat_lng': The ending coordinates (latitude, longitude).
+    
+    Returns:
+        None. Renders the recent workouts component in the Streamlit app.
+    """
+    import streamlit as st
+    from datetime import datetime
+    
+    # If no workouts, display message
+    if not workouts_list:
+        st.write("No recent workouts found.")
+        return
+    
+    # Sort workouts by start timestamp (most recent first)
+    sorted_workouts = sorted(workouts_list, 
+                         key=lambda x: x.get('start_timestamp', ''), 
+                         reverse=True)
+    
+    # Display header
+    st.subheader("Recent Workouts")
+    
+    # Define CSS for better styling
+    st.markdown("""
+        <style>
+            .workout-card {
+                border: 1px solid #e0e0e0;
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                background-color: white;
+                box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            }
+            .workout-date {
+                font-weight: bold;
+                font-size: 18px;
+                margin-bottom: 10px;
+                color: #1E90FF;
+            }
+            .workout-details {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .workout-stat {
+                display: flex;
+                flex-direction: column;
+            }
+            .stat-label {
+                color: #888;
+                font-size: 12px;
+            }
+            .stat-value {
+                font-weight: bold;
+                font-size: 16px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Display each workout
+    for workout in sorted_workouts[:5]:  # Limit to 5 most recent workouts
+        try:
+            # Parse timestamps to calculate duration
+            start_time = datetime.strptime(workout.get('start_timestamp', ''), '%Y-%m-%d %H:%M:%S')
+            end_time = datetime.strptime(workout.get('end_timestamp', ''), '%Y-%m-%d %H:%M:%S')
+            duration = end_time - start_time
+            minutes, seconds = divmod(duration.seconds, 60)
+            hours, minutes = divmod(minutes, 60)
+            
+            # Format duration string
+            duration_str = ""
+            if hours > 0:
+                duration_str += f"{hours}h "
+            if minutes > 0 or hours > 0:
+                duration_str += f"{minutes}m "
+            duration_str += f"{seconds}s"
+            
+            # Format date
+            formatted_date = start_time.strftime("%B %d, %Y")  # e.g., January 01, 2024
+            formatted_time = start_time.strftime("%I:%M %p")   # e.g., 12:00 AM
+            
+            # Create workout card
+            st.markdown(f"""
+                <div class="workout-card">
+                    <div class="workout-date">{formatted_date} at {formatted_time}</div>
+                    <div class="workout-details">
+                        <div class="workout-stat">
+                            <span class="stat-label">Duration</span>
+                            <span class="stat-value">{duration_str}</span>
+                        </div>
+                        <div class="workout-stat">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">{workout.get('distance', 0):.1f} km</span>
+                        </div>
+                        <div class="workout-stat">
+                            <span class="stat-label">Steps</span>
+                            <span class="stat-value">{workout.get('steps', 0):,}</span>
+                        </div>
+                        <div class="workout-stat">
+                            <span class="stat-label">Calories Burned</span>
+                            <span class="stat-value">{workout.get('calories_burned', 0)}</span>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+        except (ValueError, KeyError, Exception) as e:
+            # Handle potential errors gracefully
+            st.error(f"Error displaying workout: {e}")

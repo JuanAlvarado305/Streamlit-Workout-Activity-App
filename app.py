@@ -33,6 +33,9 @@ def display_app_page():
     # Add space after the component to prevent cutoff
     st.write("###")  # This adds extra vertical space
     
+    # Display recent workouts section
+    display_recent_workouts(user_workouts)
+    
     st.markdown("---")  # Add separator between sections
     
     # Display user posts section
