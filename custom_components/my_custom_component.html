@@ -1,5 +1,76 @@
 <!-- CSS -->
 <style>
+    .activity-summary-container {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+     
+    .activity-summary-title {
+        color: #3a4750;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+     
+    .stat-card {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+     
+    .stat-title {
+        margin-top: 0;
+        color: #3a4750;
+        font-size: 16px;
+        font-weight: normal;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px 0;
+        color: #00a8e8;
+    }
+     
+    .activity-list {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+     
+    .activity-list-title {
+        margin-top: 0;
+        color: #3a4750;
+    }
+
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        color: #6c757d;
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: bold;
+    }
+     
+    .activity-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
     /* Note that the CSS selector matches the HTML class name */
     .custom-component-container {
         border: 2px solid black;
@@ -8,6 +79,41 @@
 </style>
 
 <!-- HTML -->
+<div class="activity-summary-container">
+    <h2 class="activity-summary-title">Activity Summary</h2>
+    
+    <div class="stat-grid">
+        <div class="stat-card">
+            <h3 class="stat-title">Workouts</h3>
+            <p class="stat-value">{{WORKOUT_COUNT}}</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3 class="stat-title">Total Distance</h3>
+            <p class="stat-value">{{TOTAL_DISTANCE}} km</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3 class="stat-title">Total Steps</h3>
+            <p class="stat-value">{{TOTAL_STEPS}}</p>
+        </div>
+        
+        <div class="stat-card">
+            <h3 class="stat-title">Calories Burned</h3>
+            <p class="stat-value">{{TOTAL_CALORIES}}</p>
+        </div>
+    </div>
+    
+    <div class="activity-list">
+        <h3 class="activity-list-title">Recent Activity</h3>
+        <div class="activity-header">
+            <span>Date</span>
+            <span>Distance</span>
+            <span>Steps</span>
+            <span>Calories</span>
+        </div>
+        {{ACTIVITY_ROWS}}
+    </div>
 <div class="custom-component-container">
     <h2>My Custom Component</h2>
     <p>Your name is: {{NAME}}</p>
