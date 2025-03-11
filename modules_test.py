@@ -555,12 +555,21 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         
         for call in calls:
             call_content = call[0][0]
-            if "30s" in call_content and not "m" in call_content:
+            if '<span class="stat-value">30s</span>' in call_content and not '<span class="stat-value">m</span>' in call_content:
+            #if "30s" in call_content and not "m" in call_content:
                 seconds_only_found = True
             elif "5m 30s" in call_content:
                 minutes_seconds_found = True
             elif "1h 30m" in call_content:
                 hours_minutes_seconds_found = True
+
+            # Check for the exact duration span for seconds-only workout
+            # if '<span class="stat-value">30s</span>' in call_content:
+            #     seconds_only_found = True
+            # if "5m 30s" in call_content:
+            #     minutes_seconds_found = True
+            # if "1h 30m" in call_content:
+            #     hours_minutes_seconds_found = True
         
         # Verify all duration formats were found
         self.assertTrue(seconds_only_found, "Seconds-only duration not formatted correctly")
