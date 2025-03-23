@@ -8,6 +8,7 @@
 #############################################################################
 
 import streamlit as st
+from data_fetcher import get_user_profile
 from html import escape
 from internals import create_component
 from datetime import datetime
@@ -26,10 +27,18 @@ def display_my_custom_component(value):
     create_component(data, html_file_name)
 
 
-def display_post(username, user_image, timestamp, content, post_image):
+def display_post(post, get_user_data=get_user_profile):
     """Displays a user post with an improved layout in Streamlit."""
     """This function was created with the help of ChatGPT and Gemini"""
- 
+    
+    #Get User Data
+    userData = get_user_data(post['user_id'])
+    username = userData['username']
+    user_image = userData['profile_image']
+    timestamp = post['timestamp']
+    content = post['content']
+    post_image = post['image']
+
     # Formated Timestamp
     dt_object = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
     formatted_time = dt_object.strftime("%d %b %Y, %H:%M")  # 08 Mar 2024, 14:30

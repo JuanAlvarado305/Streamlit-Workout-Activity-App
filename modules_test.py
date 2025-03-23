@@ -12,21 +12,29 @@ from streamlit.testing.v1 import AppTest
 from html import escape
 from datetime import datetime
 from modules import display_post, display_activity_summary, display_genai_advice, display_recent_workouts
-from unittest.mock import patch, MagicMock
 
 # Write your tests below
 
 class TestDisplayPost(unittest.TestCase):
-    """Tests the display_post function."""
-    """These tests were created with the assistance of Gemini"""
+    """Tests the updated display_post function with refactored arguments."""
+
+    def setUp(self):
+        self.mock_user = {
+            "username": "test_user",
+            "profile_image": "https://picsum.photos/50/50"
+        }
+
+    def fake_get_user_profile(self, user_id):
+        return self.mock_user
 
     def test_display_post_with_image(self):
         """Tests display_post with an image."""
-        username = "test_user"
-        user_image = "https://picsum.photos/50/50"
-        timestamp = "2024-03-15 12:00:00"
-        content = "This is a test post with an image."
-        post_image = "https://picsum.photos/600/400"
+        post = {
+            "user_id": "user1",
+            "timestamp": "2024-03-15 12:00:00",
+            "content": "This is a test post with an image.",
+            "image": "https://picsum.photos/600/400"
+        }
 
         with patch("streamlit.container") as mock_container, \
              patch("streamlit.columns") as mock_columns, \
@@ -37,42 +45,33 @@ class TestDisplayPost(unittest.TestCase):
             mock_col2 = MagicMock()
             mock_columns.return_value = (mock_col1, mock_col2)
 
-            display_post(username, user_image, timestamp, content, post_image)
+            display_post(post, get_user_data=self.fake_get_user_profile)
 
-            # Verify that streamlit.container was called
             mock_container.assert_called_once()
-
-            # Verify that streamlit.columns was called with the correct arguments
             mock_columns.assert_called_once_with([1, 11])
+            mock_markdown.assert_any_call(f'<img src="{self.mock_user["profile_image"]}" class="profile-pic">', unsafe_allow_html=True)
 
-            # Verify that streamlit.markdown was called for the profile image
-            mock_markdown.assert_any_call(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
-
-            # Verify that streamlit.markdown was called for the username and timestamp
-            formatted_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").strftime("%d %b %Y, %H:%M")
+            formatted_time = datetime.strptime(post["timestamp"], "%Y-%m-%d %H:%M:%S").strftime("%d %b %Y, %H:%M")
             mock_markdown.assert_any_call(
                 f"""
                 <div class="post-info">
-                    <strong>{username}</strong>
+                    <strong>{self.mock_user["username"]}</strong>
                     <span>{formatted_time}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
-
-            # Verify that streamlit.markdown was called for the post content
-            mock_markdown.assert_any_call(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
-
-            # Verify that streamlit.image was called for the post image
-            mock_image.assert_called_once_with(post_image, use_container_width=True)
+            mock_markdown.assert_any_call(f"<p class='post-content'>{post['content']} #GoogleTech2025</p>", unsafe_allow_html=True)
+            mock_image.assert_called_once_with(post["image"], use_container_width=True)
 
     def test_display_post_without_image(self):
         """Tests display_post without an image."""
-        username = "test_user"
-        user_image = "https://picsum.photos/50/50"
-        timestamp = "2024-03-15 12:00:00"
-        content = "This is a test post without an image."
-        post_image = None
+        post = {
+            "user_id": "user1",
+            "timestamp": "2024-03-15 12:00:00",
+            "content": "This is a test post without an image.",
+            "image": None
+        }
 
         with patch("streamlit.container") as mock_container, \
              patch("streamlit.columns") as mock_columns, \
@@ -83,9 +82,8 @@ class TestDisplayPost(unittest.TestCase):
             mock_col2 = MagicMock()
             mock_columns.return_value = (mock_col1, mock_col2)
 
-            display_post(username, user_image, timestamp, content, post_image)
+            display_post(post, get_user_data=self.fake_get_user_profile)
 
-            # Verify that streamlit.image was not called
             mock_image.assert_not_called()
 
 class TestDisplayActivitySummary(unittest.TestCase):

@@ -43,13 +43,7 @@ def display_app_page():
     
     # Loop through posts and display them
     for post in user_posts:
-        display_post(
-            username = user_info["username"],
-            user_image = user_info["profile_image"],
-            timestamp = post["timestamp"],
-            content = post["content"],
-            post_image = "https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8",
-        )
+        display_post(post)
         st.markdown("---")  # Adds a separator between posts
         
     # Display a custom component example.
