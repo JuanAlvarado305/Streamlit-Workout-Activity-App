@@ -7,13 +7,75 @@
 #############################################################################
 import unittest
 from unittest.mock import patch, MagicMock
-from data_fetcher import get_user_posts
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
+
 
 class TestDataFetcher(unittest.TestCase):
 
     def test_foo(self):
         pass
        
+       
+
+class TestGetUserProfile(unittest.TestCase):
+    """Tests the get_user_profile function."""
+    #Tests were created with the assistance of ChatGPT
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_profile_with_friends(self, mock_client_class):
+        
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [{
+            "name": "Alice Johnson",
+            "username": "alicej",
+            "DateOfBirth": "1990-01-15",
+            "ImageUrl": "http://example.com/images/alice.jpg",
+            "friends": ["user2", "user3"]
+        }]
+
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_user_profile("user1")
+        self.assertEqual(result["username"], "alicej")
+        self.assertIn("user2", result["friends"])
+        self.assertEqual(len(result["friends"]), 2)
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_profile_no_friends(self, mock_client_class):
+        
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [{
+            "name": "Charlie Brown",
+            "username": "charlieb",
+            "DateOfBirth": "1992-11-05",
+            "ImageUrl": "http://example.com/images/charlie.jpg",
+            "friends": []
+        }]
+
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_user_profile("user3")
+        self.assertEqual(result["username"], "charlieb")
+        self.assertEqual(result["friends"], [])
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_profile_user_not_found(self, mock_client_class):
+
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []
+
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_user_profile("user999")
+        self.assertEqual(result, {})
+
+
 
 class TestGetUserPosts(unittest.TestCase):
     """Tests the get_user_posts function."""
@@ -48,7 +110,7 @@ class TestGetUserPosts(unittest.TestCase):
 
     
     @patch("data_fetcher.bigquery.Client")
-    def test_get_user_posts_empy(self, mock_client_class):
+    def test_get_user_posts_empty(self, mock_client_class):
         """Returns empty list when user has no posts"""
 
         mock_client = MagicMock()

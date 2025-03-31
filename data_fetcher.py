@@ -99,13 +99,39 @@ def get_user_workouts(user_id):
 
 
 def get_user_profile(user_id):
-    """Returns information about the given user.
+    """Returns information about the given user."""
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT
+            u.name,
+            u.username,
+            u.DateOfBirth,
+            u.ImageUrl,
+            ARRAY_AGG(f.UserId2 IGNORE NULLS) AS friends
+        FROM `roberttechx25.ISE.Users` AS u
+        LEFT JOIN `roberttechx25.ISE.Friends` AS f
+            ON u.UserId = f.UserId1
+        WHERE u.UserId = {user_id}
+        GROUP BY u.name, u.username, u.DateOfBirth, u.ImageUrl
     """
-    if user_id not in users:
-        raise ValueError(f'User {user_id} not found.')
-    return users[user_id]
+    #This query was created with the assistance of ChatGPT
+    
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    )
+
+    query_job = client.query(query, job_config=query_config)
+    results = list(query_job.result())
+
+    if results:
+        return dict(results[0])
+    else:
+        return {}
 
 
 def get_user_posts(user_id):
@@ -115,7 +141,7 @@ def get_user_posts(user_id):
 
     query = f"""
         SELECT * FROM `roberttechx25.ISE.Posts`
-        WHERE user_id = '{user_id}'
+        WHERE AuthorId = '{user_id}'
         ORDER BY timestamp DESC
     """
 
