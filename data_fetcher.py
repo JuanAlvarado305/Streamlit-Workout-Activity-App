@@ -9,6 +9,8 @@
 #############################################################################
 
 import random
+from google.cloud import bigquery
+
 
 users = {
     'user1': {
@@ -107,21 +109,26 @@ def get_user_profile(user_id):
 
 
 def get_user_posts(user_id):
-    """Returns a list of a user's posts.
+    """Returns a list of a user's posts."""
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT * FROM `roberttechx25.ISE.Posts`
+        WHERE user_id = '{user_id}'
+        ORDER BY timestamp DESC
     """
-    content = random.choice([
-        'Had a great workout today!',
-        'The AI really motivated me to push myself further, I ran 10 miles!',
-    ])
-    return [{
-        'user_id': user_id,
-        'post_id': 'post1',
-        'timestamp': '2024-01-01 00:00:00',
-        'content': content,
-        'image': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
-    }]
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    ) #This part was created with the assistance of ChatGPT
+
+    query_job = client.query(query, job_config=query_config)
+    results = query_job.result()
+    return [dict(row) for row in results]
+
 
 
 def get_genai_advice(user_id):
