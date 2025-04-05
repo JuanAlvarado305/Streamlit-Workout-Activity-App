@@ -8,6 +8,7 @@
 import streamlit as st
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
+from activity_page import activity_page
 
 userId = 'user1'
 
@@ -15,6 +16,7 @@ def display_app_page():
     """Displays the home page of the app."""
 
     st.title('Welcome to the Spaghetti Crew Workout App!')
+    st.markdown("[Go to Activity Page](activity_page)")
 
     # Fetch user data
     user_info = get_user_profile(userId)
