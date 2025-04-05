@@ -11,7 +11,6 @@
 import random
 from google.cloud import bigquery
 
-client = bigquery.Client(project="roberttechx25")
 
 def get_user_sensor_data(user_id, workout_id):
     """Returns a list of timestampped information for a given workout.
@@ -70,6 +69,8 @@ def get_user_workouts(user_id):
 def get_user_profile(user_id):
     """Returns information about the given user."""
 
+    client = bigquery.Client(project="roberttechx25")
+
     query = f"""
         SELECT
             u.Name,
@@ -103,6 +104,8 @@ def get_user_profile(user_id):
 
 def get_user_posts(user_id):
     """Returns a list of a user's posts."""
+
+    client = bigquery.Client(project="roberttechx25")
 
     query = f"""
         SELECT * FROM `roberttechx25.ISE.Posts`
