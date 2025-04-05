@@ -105,6 +105,8 @@ def get_user_workouts(user_id):
             'calories_burned': 410,
         },
     ]
+    if user_id not in users:
+        return workouts
     return workouts
 
 
