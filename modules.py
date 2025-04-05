@@ -32,16 +32,16 @@ def display_post(post, get_user_data=get_user_profile):
     """This function was created with the help of ChatGPT and Gemini"""
     
     #Get User Data
-    userData = get_user_data(post['user_id'])
-    username = userData['username']
-    user_image = userData['profile_image']
-    timestamp = post['timestamp']
-    content = post['content']
-    post_image = post['image']
+    userData = get_user_data(post['AuthorId'])
+    username = userData['Username']
+    user_image = userData['ImageUrl']
+    timestamp = post['Timestamp']
+    content = post['Content']
+    post_image = post['ImageUrl']
 
     # Formated Timestamp
-    dt_object = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-    formatted_time = dt_object.strftime("%d %b %Y, %H:%M")  # 08 Mar 2024, 14:30
+    
+    formatted_time = timestamp.strftime("%d %b %Y, %I:%M %p")  # 08 Mar 2024, 02:30 PM
  
     # CSS
     st.markdown(
@@ -295,8 +295,6 @@ def display_recent_workouts(workouts_list):
     Returns:
         None. Renders the recent workouts component in the Streamlit app.
     """
-    import streamlit as st
-    from datetime import datetime
     
     # If no workouts, display message
     if not workouts_list:
