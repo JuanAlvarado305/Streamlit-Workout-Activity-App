@@ -27,5 +27,11 @@ class TestDataFetcher(unittest.TestCase):
         self.assertEqual(workouts[0]['steps'], 7500)
         self.assertEqual(workouts[0]['calories_burned'], 350)
 
+    def test_get_user_workouts_empty(self):
+        """Tests that get_user_workouts returns an empty list when the user has no workouts."""
+        workouts = get_user_workouts("nonexistent_user")
+        self.assertEqual(len(workouts), 0)
+
+
 if __name__ == "__main__":
     unittest.main()
