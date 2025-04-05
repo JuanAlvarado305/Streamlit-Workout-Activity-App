@@ -12,38 +12,6 @@ import random
 from google.cloud import bigquery
 
 
-users = {
-    'user1': {
-        'full_name': 'Remi',
-        'username': 'remi_the_rems',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user2', 'user3', 'user4'],
-    },
-    'user2': {
-        'full_name': 'Blake',
-        'username': 'blake',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1'],
-    },
-    'user3': {
-        'full_name': 'Jordan',
-        'username': 'jordanjordanjordan',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1', 'user4'],
-    },
-    'user4': {
-        'full_name': 'Gemmy',
-        'username': 'gems',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1', 'user3'],
-    },
-}
-
-
 def get_user_sensor_data(user_id, workout_id):
     """Returns a list of timestampped information for a given workout.
 
@@ -101,20 +69,20 @@ def get_user_workouts(user_id):
 def get_user_profile(user_id):
     """Returns information about the given user."""
 
-    client = bigquery.Client()
+    client = bigquery.Client(project="roberttechx25")
 
     query = f"""
         SELECT
-            u.name,
-            u.username,
+            u.Name,
+            u.Username,
             u.DateOfBirth,
             u.ImageUrl,
-            ARRAY_AGG(f.UserId2 IGNORE NULLS) AS friends
+            ARRAY_AGG(f.UserId2 IGNORE NULLS) AS Friends
         FROM `roberttechx25.ISE.Users` AS u
         LEFT JOIN `roberttechx25.ISE.Friends` AS f
             ON u.UserId = f.UserId1
-        WHERE u.UserId = {user_id}
-        GROUP BY u.name, u.username, u.DateOfBirth, u.ImageUrl
+        WHERE u.UserId = @user_id
+        GROUP BY u.Name, u.Username, u.DateOfBirth, u.ImageUrl
     """
     #This query was created with the assistance of ChatGPT
     
@@ -137,11 +105,11 @@ def get_user_profile(user_id):
 def get_user_posts(user_id):
     """Returns a list of a user's posts."""
 
-    client = bigquery.Client()
+    client = bigquery.Client(project="roberttechx25")
 
     query = f"""
         SELECT * FROM `roberttechx25.ISE.Posts`
-        WHERE AuthorId = '{user_id}'
+        WHERE AuthorId = @user_id
         ORDER BY timestamp DESC
     """
 

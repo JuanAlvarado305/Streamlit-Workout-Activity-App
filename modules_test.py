@@ -20,8 +20,8 @@ class TestDisplayPost(unittest.TestCase):
 
     def setUp(self):
         self.mock_user = {
-            "username": "test_user",
-            "profile_image": "https://picsum.photos/50/50"
+            "Username": "test_user",
+            "ImageUrl": "https://picsum.photos/50/50"
         }
 
     def fake_get_user_profile(self, user_id):
@@ -30,10 +30,11 @@ class TestDisplayPost(unittest.TestCase):
     def test_display_post_with_image(self):
         """Tests display_post with an image."""
         post = {
-            "user_id": "user1",
-            "timestamp": "2024-03-15 12:00:00",
-            "content": "This is a test post with an image.",
-            "image": "https://picsum.photos/600/400"
+            "PostId": "post1",
+            "AuthorId": "user1",
+            "Timestamp": datetime.strptime("2024-03-15 12:00:00", "%Y-%m-%d %H:%M:%S"),
+            "Content": "This is a test post with an image.",
+            "ImageUrl": "https://picsum.photos/600/400"
         }
 
         with patch("streamlit.container") as mock_container, \
@@ -49,28 +50,29 @@ class TestDisplayPost(unittest.TestCase):
 
             mock_container.assert_called_once()
             mock_columns.assert_called_once_with([1, 11])
-            mock_markdown.assert_any_call(f'<img src="{self.mock_user["profile_image"]}" class="profile-pic">', unsafe_allow_html=True)
+            mock_markdown.assert_any_call(f'<img src="{self.mock_user["ImageUrl"]}" class="profile-pic">', unsafe_allow_html=True)
 
-            formatted_time = datetime.strptime(post["timestamp"], "%Y-%m-%d %H:%M:%S").strftime("%d %b %Y, %H:%M")
+            formatted_time = post["Timestamp"].strftime("%d %b %Y, %I:%M %p")
             mock_markdown.assert_any_call(
                 f"""
                 <div class="post-info">
-                    <strong>{self.mock_user["username"]}</strong>
+                    <strong>{self.mock_user["Username"]}</strong>
                     <span>{formatted_time}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
-            mock_markdown.assert_any_call(f"<p class='post-content'>{post['content']} #GoogleTech2025</p>", unsafe_allow_html=True)
-            mock_image.assert_called_once_with(post["image"], use_container_width=True)
+            mock_markdown.assert_any_call(f"<p class='post-content'>{post['Content']} #GoogleTech2025</p>", unsafe_allow_html=True)
+            mock_image.assert_called_once_with(post["ImageUrl"], use_container_width=True)
 
     def test_display_post_without_image(self):
         """Tests display_post without an image."""
         post = {
-            "user_id": "user1",
-            "timestamp": "2024-03-15 12:00:00",
-            "content": "This is a test post without an image.",
-            "image": None
+            "PostId": "post1",
+            "AuthorId": "user1",
+            "Timestamp": datetime.strptime("2024-03-15 12:00:00", "%Y-%m-%d %H:%M:%S"),
+            "Content": "This is a test post without an image.",
+            "ImageUrl": None
         }
 
         with patch("streamlit.container") as mock_container, \
