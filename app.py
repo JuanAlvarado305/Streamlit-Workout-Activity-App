@@ -68,6 +68,14 @@ def display_app_page():
         user_workouts = get_user_workouts(userId)
         st.metric("Total Workouts", len(user_workouts))
         st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
+        
+        #Team Memebers 
+        st.markdown("---")
+        st.subheader("Spaghetti Crew Team")
+        st.markdown("Juan")
+        st.markdown("Jona")
+        st.markdown("Foluso")
+        st.markdown("Loie")
 
     # Main content area
     st.title('Welcome to the Spaghetti Crew Workout App!')
