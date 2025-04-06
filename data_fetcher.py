@@ -11,6 +11,7 @@
 import random
 from google.cloud import bigquery
 
+
 users = {
     'user1': {
         'full_name': 'Remi',
@@ -233,17 +234,17 @@ def get_genai_advice(user_id):
       1. Retrieves user data and the aggregated daily workout data.
       2. Constructs a personalized prompt including workout metrics using the user's username.
       3. Calls Vertex AI to generate multiple pieces of advice.
-      4. Randomly selects one piece of advice and, if it doesn't include the user's username, appends the username.
+      4. Randomly selects one piece of advice and, if it doesn't include the user's username (case‐insensitively), uses a fallback message.
       5. Randomly decides on an image.
       6. Returns a dictionary with keys: advice_id, timestamp, content, and image.
     """
     import vertexai
     import json
-    import random
     from vertexai.generative_models import GenerativeModel, GenerationConfig
 
     user_data = get_user_profile(user_id)
-    username = user_data.get("username", "User")
+    # Use the username (in lowercase) for personalization.
+    username = user_data.get("username", "user").lower()
 
     daily_data = get_user_daily_workout_data(user_id)
     total_distance = daily_data["distance"]
@@ -251,12 +252,11 @@ def get_genai_advice(user_id):
     total_calories = daily_data["calories"]
     advice_timestamp = daily_data["advice_timestamp"]
 
-    # Construct a detailed prompt that includes the user's workout metrics.
     prompt = (
-        f"User {username} has just finished their workout today, covering {total_distance:.1f} km, "
-        f"taking {total_steps} steps, and burning {total_calories} calories. Provide a JSON array of 4 unique, "
-        f"concise motivational advices. Each advice should be a single sentence that acknowledges these metrics, "
-        f"offers personalized encouragement, and ideally references at least one of these workout details."
+        f"Provide a list of 4 concise motivational advices for {username}. "
+        f"Today, they have covered {total_distance:.1f} km, taken {total_steps} steps, "
+        f"and burned {total_calories} calories. Each advice should be a single sentence "
+        f"that is encouraging, tailored to these metrics, and includes the username '{username}'."
     )
 
     PROJECT_ID = "roberttechx25"
@@ -289,9 +289,12 @@ def get_genai_advice(user_id):
         chosen_advice = fallback
     else:
         chosen_advice = random.choice(advices)
-        # Instead of replacing the advice if username is missing, we append it.
-        if username not in chosen_advice:
-            chosen_advice = f"{chosen_advice} - {username}"
+        # Ensure the returned advice includes the username in lowercase.
+        if username not in chosen_advice.lower():
+            chosen_advice = fallback
+        else:
+            # Replace any capitalized occurrences of the username with the lowercase version.
+            chosen_advice = chosen_advice.replace(username.capitalize(), username)
 
     image = random.choice([
         "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3",
@@ -304,4 +307,3 @@ def get_genai_advice(user_id):
         "content": chosen_advice,
         "image": image,
     }
-    
