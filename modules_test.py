@@ -597,6 +597,21 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         # Verify error is displayed
         mock_error.assert_called()
 
+class TestInsertPost(unittest.TestCase):
+    """Tests for the insert_post function."""
+
+    @patch('modules.st.write')
+    def test_insert_post(self, mock_write):
+        """Tests that insert_post is called with the correct arguments."""
+        from modules import insert_post  # Import here to avoid circular dependency
+        user_id = "user1"
+        content = "This is a test post."
+        
+        insert_post(user_id, content)
+        
+        # Check that st.write is called with the correct message
+        mock_write.assert_called_with("Post inserted (placeholder)")
+
 
 if __name__ == "__main__":
     unittest.main()
