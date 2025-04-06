@@ -85,9 +85,11 @@ def display_app_page():
         user_workouts = get_user_workouts(userId)
     user_posts = get_user_posts(userId)
     
+
     # Display activity summary section with anchor
     st.markdown("<div id='activity-summary'></div>", unsafe_allow_html=True)
     st.header(f"Activity Summary")
+
     
     # Add space before the component to ensure it's visible
     st.write("###")  # This adds extra vertical space
@@ -114,13 +116,7 @@ def display_app_page():
     for post in user_posts:
         display_post(post)
         st.markdown("---")  # Adds a separator between posts
-        
-    # Display a custom component example.
-    value = st.text_input('Enter your name')
-    
-    # Comment out this line of code because am already displaying custom component to
-    # the screen
-    # display_my_custom_component(value)
+
 
     # Display GenAI advice as part of the page with anchor
     st.markdown("<div id='motivational-quote'></div>", unsafe_allow_html=True)

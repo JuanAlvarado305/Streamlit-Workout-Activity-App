@@ -9,37 +9,7 @@
 #############################################################################
 
 import random
-
-users = {
-    'user1': {
-        'full_name': 'Remi',
-        'username': 'remi_the_rems',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user2', 'user3', 'user4'],
-    },
-    'user2': {
-        'full_name': 'Blake',
-        'username': 'blake',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1'],
-    },
-    'user3': {
-        'full_name': 'Jordan',
-        'username': 'jordanjordanjordan',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1', 'user4'],
-    },
-    'user4': {
-        'full_name': 'Gemmy',
-        'username': 'gems',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1', 'user3'],
-    },
-}
+from google.cloud import bigquery
 
 
 def get_user_sensor_data(user_id, workout_id):
@@ -111,31 +81,62 @@ def get_user_workouts(user_id):
 
 
 def get_user_profile(user_id):
-    """Returns information about the given user.
+    """Returns information about the given user."""
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    client = bigquery.Client(project="roberttechx25")
+
+    query = f"""
+        SELECT
+            u.Name,
+            u.Username,
+            u.DateOfBirth,
+            u.ImageUrl,
+            ARRAY_AGG(f.UserId2 IGNORE NULLS) AS Friends
+        FROM `roberttechx25.ISE.Users` AS u
+        LEFT JOIN `roberttechx25.ISE.Friends` AS f
+            ON u.UserId = f.UserId1
+        WHERE u.UserId = @user_id
+        GROUP BY u.Name, u.Username, u.DateOfBirth, u.ImageUrl
     """
-    if user_id not in users:
-        raise ValueError(f'User {user_id} not found.')
-    return users[user_id]
+    #This query was created with the assistance of ChatGPT
+    
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    )
+
+    query_job = client.query(query, job_config=query_config)
+    results = list(query_job.result())
+
+    if results:
+        return dict(results[0])
+    else:
+        return {}
 
 
 def get_user_posts(user_id):
-    """Returns a list of a user's posts.
+    """Returns a list of a user's posts."""
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    client = bigquery.Client(project="roberttechx25")
+
+    query = f"""
+        SELECT * FROM `roberttechx25.ISE.Posts`
+        WHERE AuthorId = @user_id
+        ORDER BY timestamp DESC
     """
-    content = random.choice([
-        'Had a great workout today!',
-        'The AI really motivated me to push myself further, I ran 10 miles!',
-    ])
-    return [{
-        'user_id': user_id,
-        'post_id': 'post1',
-        'timestamp': '2024-01-01 00:00:00',
-        'content': content,
-        'image': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
-    }]
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    ) #This part was created with the assistance of ChatGPT
+
+    query_job = client.query(query, job_config=query_config)
+    results = query_job.result()
+    return [dict(row) for row in results]
+
 
 
 def get_genai_advice(user_id):
