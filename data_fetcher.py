@@ -9,6 +9,7 @@
 #############################################################################
 
 import random
+import re  # For case-insensitive replacement in get_genai_advice
 from google.cloud import bigquery
 
 
@@ -234,7 +235,7 @@ def get_genai_advice(user_id):
       1. Retrieves user data and the aggregated daily workout data.
       2. Constructs a personalized prompt including workout metrics using the user's username.
       3. Calls Vertex AI to generate multiple pieces of advice.
-      4. Randomly selects one piece of advice and, if it doesn't include the user's username (case‐insensitively), uses a fallback message.
+      4. Randomly selects one piece of advice and, if it doesn't include the user's username (case‑insensitively), uses a fallback message.
       5. Randomly decides on an image.
       6. Returns a dictionary with keys: advice_id, timestamp, content, and image.
     """
@@ -243,8 +244,7 @@ def get_genai_advice(user_id):
     from vertexai.generative_models import GenerativeModel, GenerationConfig
 
     user_data = get_user_profile(user_id)
-    # Use the username (in lowercase) for personalization.
-    username = user_data.get("username", "user").lower()
+    username = user_data.get("username", "User")
 
     daily_data = get_user_daily_workout_data(user_id)
     total_distance = daily_data["distance"]
@@ -256,7 +256,7 @@ def get_genai_advice(user_id):
         f"Provide a list of 4 concise motivational advices for {username}. "
         f"Today, they have covered {total_distance:.1f} km, taken {total_steps} steps, "
         f"and burned {total_calories} calories. Each advice should be a single sentence "
-        f"that is encouraging, tailored to these metrics, and includes the username '{username}'."
+        f"that is encouraging and acknowledges their effort."
     )
 
     PROJECT_ID = "roberttechx25"
@@ -284,17 +284,16 @@ def get_genai_advice(user_id):
             return []
     advices = parse_response_to_advice(response)
     
-    fallback = f"Keep pushing forward, {username}—every step counts!"
+    fallback = f"Keep pushing forward, {username.lower()}—every step counts!"
     if not advices:
         chosen_advice = fallback
     else:
         chosen_advice = random.choice(advices)
-        # Ensure the returned advice includes the username in lowercase.
-        if username not in chosen_advice.lower():
+        if username.lower() not in chosen_advice.lower():
             chosen_advice = fallback
-        else:
-            # Replace any capitalized occurrences of the username with the lowercase version.
-            chosen_advice = chosen_advice.replace(username.capitalize(), username)
+
+    # Force the username to appear in lowercase in the final advice (case-insensitively)
+    chosen_advice = re.sub(re.escape(username), username.lower(), chosen_advice, flags=re.IGNORECASE)
 
     image = random.choice([
         "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3",
