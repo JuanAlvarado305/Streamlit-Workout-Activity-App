@@ -39,37 +39,64 @@ def display_app_page():
         }
     </style>
     """, unsafe_allow_html=True)
-
-    st.title('Welcome to the Spaghetti Crew Workout App!')
-    st.markdown("[Go to Activity Page](activity_page)")
-
-    # Fetch user data
-    user_info = get_user_profile(userId)
-    user_posts = get_user_posts(userId)
-    user_workouts = get_user_workouts(userId)
     
-    # Display activity summary section
-    st.header(f"Activity Summary for {user_info['full_name']}")
+    # Create the sidebar
+    with st.sidebar:
+        st.title("Main Menu")
+        
+        # User profile section in sidebar
+        user_info = get_user_profile(userId)
+        st.subheader(f"Welcome, {user_info['full_name']}!")
+        st.markdown("---")
+        
+        # Navigation options
+        st.subheader("Sections")
+        st.markdown("• [Activity Summary](#activity-summary)")
+        st.markdown("• [Recent Workouts](#recent-workouts)")
+        st.markdown("• [User Posts](#user-posts)")
+        st.markdown("• [Motivational Quote](#motivational-quote)")
+        
+        # Add the activity page link
+        st.markdown("---")
+        st.markdown("[Go to Activity Page](activity_page)")
+        
+        # Maybe add quick stats in sidebar
+        st.markdown("---")
+        st.subheader("Quick Stats")
+        user_workouts = get_user_workouts(userId)
+        st.metric("Total Workouts", len(user_workouts))
+        st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
+
+    # Main content area
+    st.title('Welcome to the Spaghetti Crew Workout App!')
+
+    # Fetch user data if not already fetched in sidebar
+    if 'user_workouts' not in locals():
+        user_workouts = get_user_workouts(userId)
+    user_posts = get_user_posts(userId)
+    
+    # Display activity summary section with anchor
+    st.markdown("<div id='activity-summary'></div>", unsafe_allow_html=True)
+    st.header(f"Activity Summary")
     
     # Add space before the component to ensure it's visible
     st.write("###")  # This adds extra vertical space
     
     # Display the activity summary
-    
-    """This code is having an issue with the my custom component feature, check it out
-    and fix the issue """
-
     display_activity_summary(user_workouts)
     
     # Add space after the component to prevent cutoff
     st.write("###")  # This adds extra vertical space
     
-    # Display recent workouts section
+    # Display recent workouts section with anchor
+    st.markdown("<div id='recent-workouts'></div>", unsafe_allow_html=True)
+    st.header("Recent Workouts")
     display_recent_workouts(user_workouts)
     
     st.markdown("---")  # Add separator between sections
     
-    # Display user posts section
+    # Display user posts section with anchor
+    st.markdown("<div id='user-posts'></div>", unsafe_allow_html=True)
     st.header("User Posts")
     
     # Loop through posts and display them
@@ -80,12 +107,13 @@ def display_app_page():
     # Display a custom component example.
     value = st.text_input('Enter your name')
     
-
-    # Comment out this line of code becuase am already displaying custom component to
+    # Comment out this line of code because am already displaying custom component to
     # the screen
     # display_my_custom_component(value)
 
-    # Display GenAI advice as part of the page.
+    # Display GenAI advice as part of the page with anchor
+    st.markdown("<div id='motivational-quote'></div>", unsafe_allow_html=True)
+    st.header("Today's Motivation")
     motivate(userId)
  
  
