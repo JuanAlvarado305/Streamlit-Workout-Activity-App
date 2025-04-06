@@ -84,7 +84,8 @@ def display_app_page():
     
     # Display the activity summary
     display_activity_summary(user_workouts)
-    
+    st.markdown("---")
+
     # Add space after the component to prevent cutoff
     st.write("###")  # This adds extra vertical space
     
