@@ -9,9 +9,7 @@
 #############################################################################
 
 import random
-import re  # For case-insensitive replacement in get_genai_advice
 from google.cloud import bigquery
-
 
 users = {
     'user1': {
@@ -48,15 +46,11 @@ users = {
 def get_user_sensor_data(user_id, workout_id):
     """
     Returns a list of timestamped sensor data for a given workout from BigQuery.
-    
     Each item in the returned list is a dictionary with the following keys:
       - sensor_type: The human-readable name of the sensor (from SensorTypes.Name)
       - timestamp: The datetime when the sensor reading was taken (from SensorData.Timestamp)
       - data: The sensor reading value (from SensorData.SensorValue)
       - units: The measurement units (from SensorTypes.Units)
-    
-    Although the function receives a user_id, the sensor data is retrieved by filtering on workout_id,
-    since each workout is uniquely associated with one user.
     """
     from google.cloud import bigquery
     project_id = "roberttechx25"
@@ -75,9 +69,7 @@ def get_user_sensor_data(user_id, workout_id):
         ORDER BY sd.Timestamp
     """
     query_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter("workout_id", "STRING", workout_id)
-        ]
+        query_parameters=[bigquery.ScalarQueryParameter("workout_id", "STRING", workout_id)]
     )
     query_job = client.query(query, job_config=query_config)
     sensor_data = [dict(row) for row in query_job.result()]
@@ -85,20 +77,11 @@ def get_user_sensor_data(user_id, workout_id):
 
 
 def get_user_workouts(user_id):
-    """Returns a list of user's workouts.
-
-    This function currently returns random data. You will re-write it in Unit 3.
-    """
+    """Returns a list of user's workouts (random data for now)."""
     workouts = []
     for index in range(random.randint(1, 3)):
-        random_lat_lng_1 = (
-            1 + random.randint(0, 100) / 100,
-            4 + random.randint(0, 100) / 100,
-        )
-        random_lat_lng_2 = (
-            1 + random.randint(0, 100) / 100,
-            4 + random.randint(0, 100) / 100,
-        )
+        random_lat_lng_1 = (1 + random.randint(0, 100) / 100, 4 + random.randint(0, 100) / 100)
+        random_lat_lng_2 = (1 + random.randint(0, 100) / 100, 4 + random.randint(0, 100) / 100)
         workouts.append({
             'workout_id': f'workout{index}',
             'start_timestamp': '2024-01-01 00:00:00',
@@ -129,16 +112,11 @@ def get_user_profile(user_id):
         GROUP BY u.name, u.username, u.DateOfBirth, u.ImageUrl
     """
     query_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
-        ]
+        query_parameters=[bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)]
     )
     query_job = client.query(query, job_config=query_config)
     results = list(query_job.result())
-    if results:
-        return dict(results[0])
-    else:
-        return {}
+    return dict(results[0]) if results else {}
 
 
 def get_user_posts(user_id):
@@ -151,9 +129,7 @@ def get_user_posts(user_id):
         ORDER BY timestamp DESC
     """
     query_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
-        ]
+        query_parameters=[bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)]
     )
     query_job = client.query(query, job_config=query_config)
     results = query_job.result()
@@ -179,10 +155,10 @@ def get_user_daily_workout_data(user_id) -> dict:
     aggregates relevant metrics, and returns a summary.
     
     Returns a dictionary with:
-        - distance: Total distance (km)
-        - steps: Total steps
-        - calories: Total calories burned
-        - advice_timestamp: The most recent EndTimestamp in "YYYY-MM-DD HH:MM:SS" format
+      - distance: Total distance (km)
+      - steps: Total steps
+      - calories: Total calories burned
+      - advice_timestamp: The most recent EndTimestamp in "YYYY-MM-DD HH:MM:SS" format
     """
     client = bigquery.Client(project="roberttechx25")
     query = f"""
@@ -200,12 +176,7 @@ def get_user_daily_workout_data(user_id) -> dict:
     job = client.query(query)
     results = list(job.result())
     if not results:
-        return {
-            "distance": 0.0,
-            "steps": 0,
-            "calories": 0,
-            "advice_timestamp": "1970-01-01 00:00:00"
-        }
+        return {"distance": 0.0, "steps": 0, "calories": 0, "advice_timestamp": "1970-01-01 00:00:00"}
     
     total_distance = 0.0
     total_steps = 0
@@ -219,12 +190,7 @@ def get_user_daily_workout_data(user_id) -> dict:
         if most_recent_end is None or end_ts > most_recent_end:
             most_recent_end = end_ts
     advice_timestamp = most_recent_end.strftime("%Y-%m-%d %H:%M:%S") if most_recent_end else "1970-01-01 00:00:00"
-    return {
-        "distance": total_distance,
-        "steps": total_steps,
-        "calories": total_calories,
-        "advice_timestamp": advice_timestamp
-    }
+    return {"distance": total_distance, "steps": total_steps, "calories": total_calories, "advice_timestamp": advice_timestamp}
 
 
 def get_genai_advice(user_id):
@@ -235,7 +201,7 @@ def get_genai_advice(user_id):
       1. Retrieves user data and the aggregated daily workout data.
       2. Constructs a personalized prompt including workout metrics using the user's username.
       3. Calls Vertex AI to generate multiple pieces of advice.
-      4. Randomly selects one piece of advice and, if it doesn't include the user's username (case‑insensitively), uses a fallback message.
+      4. Randomly selects one piece of advice and, if it doesn't include the user's username, uses a fallback message.
       5. Randomly decides on an image.
       6. Returns a dictionary with keys: advice_id, timestamp, content, and image.
     """
@@ -260,11 +226,23 @@ def get_genai_advice(user_id):
     )
 
     PROJECT_ID = "roberttechx25"
-    RESPONSE_SCHEMA = {
-        "type": "array",
-        "items": {"type": "string"}
-    }
-    vertexai.init(project=PROJECT_ID, location="us-central1")
+    RESPONSE_SCHEMA = {"type": "array", "items": {"type": "string"}}
+    
+    fallback = f"Keep pushing forward, {username}—every step counts!"
+    
+    try:
+        vertexai.init(project=PROJECT_ID, location="us-central1")
+    except Exception:
+        return {
+            "advice_id": "advice1",
+            "timestamp": advice_timestamp,
+            "content": fallback,
+            "image": random.choice([
+                "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3",
+                None
+            ])
+        }
+    
     model = GenerativeModel("gemini-1.5-flash-002")
     generation_config = GenerationConfig(
         response_mime_type="application/json",
@@ -284,16 +262,12 @@ def get_genai_advice(user_id):
             return []
     advices = parse_response_to_advice(response)
     
-    fallback = f"Keep pushing forward, {username.lower()}—every step counts!"
     if not advices:
         chosen_advice = fallback
     else:
         chosen_advice = random.choice(advices)
         if username.lower() not in chosen_advice.lower():
             chosen_advice = fallback
-
-    # Force the username to appear in lowercase in the final advice (case-insensitively)
-    chosen_advice = re.sub(re.escape(username), username.lower(), chosen_advice, flags=re.IGNORECASE)
 
     image = random.choice([
         "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3",
