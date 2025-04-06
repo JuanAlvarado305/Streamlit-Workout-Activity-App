@@ -6,6 +6,9 @@
 #############################################################################
 
 import streamlit as st
+# Set page to wide mode - add this at the very beginning, before any other st commands
+st.set_page_config(layout="wide")
+
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 from activity_page import activity_page
@@ -14,6 +17,28 @@ userId = 'user1'
 
 def display_app_page():
     """Displays the home page of the app."""
+    
+    # Add custom CSS focusing on making the activity summary taller
+    st.markdown("""
+    <style>
+        .activity-summary-container {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: 600px !important; /* Significantly increased height */
+            height: auto !important;
+            overflow: visible !important;
+        }
+        
+        /* Ensure content within doesn't get cut off */
+        .activity-summary-container > div {
+            min-height: 550px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
     st.title('Welcome to the Spaghetti Crew Workout App!')
     st.markdown("[Go to Activity Page](activity_page)")
@@ -30,6 +55,10 @@ def display_app_page():
     st.write("###")  # This adds extra vertical space
     
     # Display the activity summary
+    
+    """This code is having an issue with the my custom component feature, check it out
+    and fix the issue """
+
     display_activity_summary(user_workouts)
     
     # Add space after the component to prevent cutoff
@@ -50,7 +79,11 @@ def display_app_page():
         
     # Display a custom component example.
     value = st.text_input('Enter your name')
-    display_my_custom_component(value)
+    
+
+    # Comment out this line of code becuase am already displaying custom component to
+    # the screen
+    # display_my_custom_component(value)
 
     # Display GenAI advice as part of the page.
     motivate(userId)
