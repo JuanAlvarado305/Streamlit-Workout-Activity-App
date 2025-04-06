@@ -19,7 +19,6 @@ def display_home_page():
     users = get_users() 
     user_community = users[userId]['friends']
     all_community_posts = []
-    #all_community_posts = generate_fake_posts()
 
     st.title('Welcome to the Spaghetti Crew Workout App!')
 
@@ -99,46 +98,6 @@ def motivate(userId):
     content = result['content']
     image = result['image']
     display_genai_advice(timestamp, content, image)
-
-def generate_fake_posts(): # written by AI
-    import datetime
-    import random
-
-    posts = []
-    user_ids = ['user1', 'user2', 'user3', 'user4']
-    image_url = 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8'
-
-    # Generate timestamps across a few days
-    start_date = datetime.datetime(2025, 4, 1, 10, 0, 0)
-    time_deltas = [datetime.timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59)) for _ in range(12)]
-    timestamps = sorted([start_date + delta for delta in time_deltas])
-
-    content_options = [
-        "Enjoying a sunny afternoon in Atlanta!",
-        "Just finished a great workout. Feeling energized!",
-        "Trying out a new coffee shop downtown.",
-        "Exploring Piedmont Park today. Beautiful!",
-        "Making some delicious homemade pizza tonight.",
-        "Coding away on my latest project.",
-        "Thinking about my next travel adventure.",
-        "Caught a beautiful sunset over the city.",
-        "Spending time with friends this weekend.",
-        "Reading a fascinating book.",
-        "Listening to some great music.",
-        "Another day, another opportunity."
-    ]
-
-    for i in range(12):
-        user_id = random.choice(user_ids)
-        content = random.choice(content_options)
-        posts.append({
-            'user_id': user_id,
-            'post_id': f'post{i+1}',
-            'timestamp': timestamps[i].strftime('%Y-%m-%d %H:%M:%S'),
-            'content': content,
-            'image': image_url,
-        })
-    return posts
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
