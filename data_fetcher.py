@@ -73,26 +73,40 @@ def get_user_workouts(user_id):
 
     This function currently returns random data. You will re-write it in Unit 3.
     """
-    workouts = []
-    for index in range(random.randint(1, 3)):
-        random_lat_lng_1 = (
-            1 + random.randint(0, 100) / 100,
-            4 + random.randint(0, 100) / 100,
-        )
-        random_lat_lng_2 = (
-            1 + random.randint(0, 100) / 100,
-            4 + random.randint(0, 100) / 100,
-        )
-        workouts.append({
-            'workout_id': f'workout{index}',
-            'start_timestamp': '2024-01-01 00:00:00',
-            'end_timestamp': '2024-01-01 00:30:00',
-            'start_lat_lng': random_lat_lng_1,
-            'end_lat_lng': random_lat_lng_2,
-            'distance': random.randint(0, 200) / 10.0,
-            'steps': random.randint(0, 20000),
-            'calories_burned': random.randint(0, 100),
-        })
+    workouts = [
+        {
+            'workout_id': 'workout1',
+            'start_timestamp': '2025-04-01 08:00:00',
+            'end_timestamp': '2025-04-01 09:00:00',
+            'start_lat_lng': (37.7749, -122.4194),
+            'end_lat_lng': (37.7749, -122.4194),
+            'distance': 5.2,
+            'steps': 7500,
+            'calories_burned': 350,
+        },
+        {
+            'workout_id': 'workout2',
+            'start_timestamp': '2025-04-03 17:00:00',
+            'end_timestamp': '2025-04-03 18:30:00',
+            'start_lat_lng': (34.0522, -118.2437),
+            'end_lat_lng': (34.0522, -118.2437),
+            'distance': 7.8,
+            'steps': 11200,
+            'calories_burned': 520,
+        },
+        {
+            'workout_id': 'workout3',
+            'start_timestamp': '2025-04-05 10:00:00',
+            'end_timestamp': '2025-04-05 11:15:00',
+            'start_lat_lng': (40.7128, -74.0060),
+            'end_lat_lng': (40.7128, -74.0060),
+            'distance': 6.5,
+            'steps': 9300,
+            'calories_burned': 410,
+        },
+    ]
+    if user_id not in users:
+        return workouts
     return workouts
 
 
