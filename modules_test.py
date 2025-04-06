@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 from streamlit.testing.v1 import AppTest
 from html import escape
 from datetime import datetime
-from modules import display_post, display_activity_summary, display_genai_advice, display_recent_workouts
+from modules import display_post, display_activity_summary, display_genai_advice, display_recent_workouts, display_user_sensor_data
 
 # Write your tests below
 
@@ -594,6 +594,75 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         
         # Verify error is displayed
         mock_error.assert_called()
+
+class TestDisplayUserSensorData(unittest.TestCase):
+    def setUp(self):
+        # Create a simple sensor data list with two entries.
+        self.sensor_data_list = [
+            {
+                "sensor_type": "Heart Rate",
+                "timestamp": "2024-07-29 07:15:00",
+                "data": 120.0,
+                "units": "bpm"
+            },
+            {
+                "sensor_type": "Temperature",
+                "timestamp": "2024-07-29 07:30:00",
+                "data": 36.5,
+                "units": "Celsius"
+            }
+        ]
+    
+    @patch("modules.st.warning")
+    def test_empty_sensor_data(self, mock_warning):
+        """Tests that a warning is displayed when no sensor data is provided."""
+        display_user_sensor_data([])
+        mock_warning.assert_called_once_with("No sensor data available for this workout.")
+    
+    @patch("modules.st.download_button")
+    @patch("modules.st.dataframe")
+    @patch("modules.st.line_chart")
+    @patch("modules.st.multiselect")
+    @patch("modules.st.tabs")
+    @patch("modules.st.markdown")
+    @patch("modules.st.header")
+    def test_valid_sensor_data(
+        self, mock_header, mock_markdown, mock_tabs, mock_multiselect, 
+        mock_line_chart, mock_dataframe, mock_download_button
+    ):
+        """Tests that the function displays sensor data correctly using the Streamlit components."""
+        # Set up dummy tab context managers.
+        dummy_tab1 = MagicMock()
+        dummy_tab2 = MagicMock()
+        dummy_tab3 = MagicMock()
+        for dummy in (dummy_tab1, dummy_tab2, dummy_tab3):
+            dummy.__enter__.return_value = dummy
+            dummy.__exit__.return_value = None
+        mock_tabs.return_value = (dummy_tab1, dummy_tab2, dummy_tab3)
+        
+        # Simulate that the multiselect returns one sensor type.
+        mock_multiselect.return_value = ["Heart Rate"]
+        
+        # Call the function with valid sensor data.
+        display_user_sensor_data(self.sensor_data_list)
+        
+        # Check that header was called with the expected title.
+        mock_header.assert_called_with("Workout Sensor Data")
+        
+        # Check that markdown is called at least once (for summary and styling).
+        self.assertTrue(mock_markdown.call_count >= 2)
+        
+        # Check that multiselect was called with a list of sensor types.
+        mock_multiselect.assert_called_once()
+        
+        # Since at least one sensor ("Heart Rate") was selected, a line chart should be created.
+        self.assertTrue(mock_line_chart.call_count >= 1)
+        
+        # Check that the raw data table is rendered.
+        mock_dataframe.assert_called_once()
+        
+        # Verify that the CSV download button was added.
+        mock_download_button.assert_called_once()
 
 
 if __name__ == "__main__":

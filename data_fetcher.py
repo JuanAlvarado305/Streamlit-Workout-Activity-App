@@ -45,29 +45,52 @@ users = {
 
 
 def get_user_sensor_data(user_id, workout_id):
-    """Returns a list of timestampped information for a given workout.
-
-    This function currently returns random data. You will re-write it in Unit 3.
     """
-    sensor_data = []
-    sensor_types = [
-        'accelerometer',
-        'gyroscope',
-        'pressure',
-        'temperature',
-        'heart_rate',
-    ]
-    for index in range(random.randint(5, 100)):
-        random_minute = str(random.randint(0, 59))
-        if len(random_minute) == 1:
-            random_minute = '0' + random_minute
-        timestamp = '2024-01-01 00:' + random_minute + ':00'
-        data = random.random() * 100
-        sensor_type = random.choice(sensor_types)
-        sensor_data.append(
-            {'sensor_type': sensor_type, 'timestamp': timestamp, 'data': data}
-        )
+    Returns a list of timestamped sensor data for a given workout from BigQuery.
+    
+    Each item in the returned list is a dictionary with the following keys:
+      - sensor_type: The human-readable name of the sensor (from SensorTypes.Name)
+      - timestamp: The datetime when the sensor reading was taken (from SensorData.Timestamp)
+      - data: The sensor reading value (from SensorData.SensorValue)
+      - units: The measurement units (from SensorTypes.Units)
+    
+    Although the function receives a user_id, the sensor data is retrieved by filtering on workout_id,
+    since each workout is uniquely associated with one user.
+    """
+    from google.cloud import bigquery
+    
+    # Use your actual project ID and dataset name. Here, we assume:
+    # Project ID: "roberttechx25"
+    # Dataset (or COURSE_CODE): "ISE"
+    project_id = "roberttechx25"
+    dataset = "ISE"
+    
+    client = bigquery.Client(project=project_id)
+    
+    query = f"""
+        SELECT
+            st.Name AS sensor_type,
+            sd.Timestamp AS timestamp,
+            sd.SensorValue AS data,
+            st.Units AS units
+        FROM `{project_id}.{dataset}.SensorData` sd
+        JOIN `{project_id}.{dataset}.SensorTypes` st
+            ON sd.SensorId = st.SensorId
+        WHERE sd.WorkoutID = @workout_id
+        ORDER BY sd.Timestamp
+    """
+    
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("workout_id", "STRING", workout_id)
+        ]
+    )
+    
+    query_job = client.query(query, job_config=query_config)
+    sensor_data = [dict(row) for row in query_job.result()]
+    
     return sensor_data
+
 
 
 def get_user_workouts(user_id):
@@ -101,23 +124,24 @@ def get_user_workouts(user_id):
 def get_user_profile(user_id):
     """Returns information about the given user."""
 
-    client = bigquery.Client()
+    client = bigquery.Client(project="roberttechx25")
 
-    query = f"""
+    # CHANGED: Updated query to use parameter placeholder @user_id
+    # Also aliased u.ImageUrl as profile_image to match what modules.py expects.
+    query = """
         SELECT
-            u.name,
+            u.name AS full_name,  
             u.username,
             u.DateOfBirth,
-            u.ImageUrl,
+            u.ImageUrl AS profile_image,  -- CHANGED: aliasing ImageUrl as profile_image
             ARRAY_AGG(f.UserId2 IGNORE NULLS) AS friends
         FROM `roberttechx25.ISE.Users` AS u
         LEFT JOIN `roberttechx25.ISE.Friends` AS f
             ON u.UserId = f.UserId1
-        WHERE u.UserId = {user_id}
+        WHERE u.UserId = @user_id
         GROUP BY u.name, u.username, u.DateOfBirth, u.ImageUrl
     """
-    #This query was created with the assistance of ChatGPT
-    
+    # This query was created with the assistance of ChatGPT
 
     query_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -137,11 +161,14 @@ def get_user_profile(user_id):
 def get_user_posts(user_id):
     """Returns a list of a user's posts."""
 
-    client = bigquery.Client()
+    # CHANGED: Specify the project in the client instantiation.
+    client = bigquery.Client(project="roberttechx25")
 
-    query = f"""
-        SELECT * FROM `roberttechx25.ISE.Posts`
-        WHERE AuthorId = '{user_id}'
+    # CHANGED: Updated query to use parameter placeholder @user_id and alias AuthorId.
+    query = """
+        SELECT *, AuthorId as user_id_alias
+        FROM `roberttechx25.ISE.Posts`
+        WHERE AuthorId = @user_id
         ORDER BY timestamp DESC
     """
 
@@ -149,12 +176,25 @@ def get_user_posts(user_id):
         query_parameters=[
             bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
         ]
-    ) #This part was created with the assistance of ChatGPT
+    )  # This part was created with the assistance of ChatGPT
 
     query_job = client.query(query, job_config=query_config)
     results = query_job.result()
-    return [dict(row) for row in results]
-
+    posts = [dict(row) for row in results]
+    # CHANGED: Ensure that each post dictionary includes a 'user_id' key.
+    for post in posts:
+        if 'user_id_alias' in post:
+            post['user_id'] = post.pop('user_id_alias')
+        # CHANGED: If 'timestamp' is missing, provide a default value that matches the format.
+        if 'timestamp' not in post:
+            post['timestamp'] = "1970-01-01 00:00:00"  # CHANGED: Default valid timestamp
+        # CHANGED: If 'content' is missing, provide a default value.
+        if 'content' not in post:
+            post['content'] = "No Content Available"
+        # CHANGED: If 'image' is missing, provide a default value.
+        if 'image' not in post:
+            post['image'] = None
+    return posts
 
 
 def get_genai_advice(user_id):

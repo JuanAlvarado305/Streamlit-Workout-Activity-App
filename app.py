@@ -6,10 +6,11 @@
 #############################################################################
 
 import streamlit as st
-from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
+from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 
 userId = 'user1'
+workoutId = 'workout1'  # Fixed variable name
 
 def display_app_page():
     """Displays the home page of the app."""
@@ -22,7 +23,8 @@ def display_app_page():
     user_workouts = get_user_workouts(userId)
     
     # Display activity summary section
-    st.header(f"Activity Summary for {user_info['full_name']}")
+    # CHANGED: Added fallback to use 'name' if 'full_name' is missing.
+    st.header(f"Activity Summary for {user_info.get('full_name', user_info.get('name', 'Unknown User'))}")
     
     # Add space before the component to ensure it's visible
     st.write("###")  # This adds extra vertical space
@@ -49,6 +51,10 @@ def display_app_page():
     # Display a custom component example.
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
+
+    # Fetch sensor data for the given workout and display it.
+    sensor_data = get_user_sensor_data(userId, workoutId)
+    display_user_sensor_data(sensor_data)
 
     # Display GenAI advice as part of the page.
     motivate(userId)

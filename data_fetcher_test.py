@@ -137,6 +137,69 @@ class TestGetUserPosts(unittest.TestCase):
         with self.assertRaises(Exception):
             get_user_posts("user1")
 
+class TestGetUserSensorData(unittest.TestCase):
+    """Tests the get_user_sensor_data function."""
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_sensor_data_valid(self, mock_client_class):
+        """Test that valid sensor data is returned for a given workout_id."""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        # Simulate two sensor readings from the SensorData table joined with SensorTypes
+        sensor_results = [
+            {
+                "sensor_type": "Heart Rate",
+                "timestamp": "2024-07-29 07:15:00",
+                "data": 120.0,
+                "units": "bpm"
+            },
+            {
+                "sensor_type": "Temperature",
+                "timestamp": "2024-07-29 07:30:00",
+                "data": 36.5,
+                "units": "Celsius"
+            }
+        ]
+        # When .result() is called, return our simulated sensor results
+        mock_query_job.result.return_value = sensor_results
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_user_sensor_data("user1", "workout1")
+        self.assertEqual(len(result), 2)
+        # Verify first sensor reading
+        self.assertEqual(result[0]["sensor_type"], "Heart Rate")
+        self.assertEqual(result[0]["timestamp"], "2024-07-29 07:15:00")
+        self.assertEqual(result[0]["data"], 120.0)
+        self.assertEqual(result[0]["units"], "bpm")
+        # Verify second sensor reading
+        self.assertEqual(result[1]["sensor_type"], "Temperature")
+        self.assertEqual(result[1]["timestamp"], "2024-07-29 07:30:00")
+        self.assertEqual(result[1]["data"], 36.5)
+        self.assertEqual(result[1]["units"], "Celsius")
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_sensor_data_empty(self, mock_client_class):
+        """Test that an empty list is returned when there are no sensor readings."""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_user_sensor_data("user1", "non_existing_workout")
+        self.assertEqual(result, [])
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_sensor_data_error(self, mock_client_class):
+        """Test that an exception is raised when BigQuery query fails."""
+        mock_client = MagicMock()
+        mock_client.query.side_effect = Exception("BigQuery Error")
+        mock_client_class.return_value = mock_client
+
+        with self.assertRaises(Exception):
+            get_user_sensor_data("user1", "workout1")
+
 
         
 
