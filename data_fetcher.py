@@ -39,11 +39,12 @@ def get_user_sensor_data(user_id, workout_id):
 
 
 def get_user_workouts(user_id):
-    """Returns a list of user's workouts.
-
-    This function currently returns random data. You will re-write it in Unit 3.
+    """Returns a list of user's workouts from the database.
+    
+    If no workouts are found or there's an error, returns mock data.
     """
-    workouts = [
+    # Define fallback mock data
+    mock_workouts = [
         {
             'workout_id': 'workout1',
             'start_timestamp': '2025-04-01 08:00:00',
@@ -75,10 +76,53 @@ def get_user_workouts(user_id):
             'calories_burned': 410,
         },
     ]
+    
+    try:
+        # Connect to BigQuery
+        client = bigquery.Client(project="roberttechx25")
+        
+        # SQL query to fetch user workouts
+        query = """
+            SELECT *
+            FROM `roberttechx25.ISE.Workouts`
+            WHERE UserId = @user_id
+            ORDER BY start_timestamp DESC
+        """
+        
+        # Configure query parameters
+        query_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+            ]
+        )
+        
+        # Execute query
+        query_job = client.query(query, job_config=query_config)
+        results = query_job.result()
+        
+        # Convert results to list of dictionaries
+        workouts = [dict(row) for row in results]
+        
+        # Return query results if found, otherwise return mock data
+        if workouts:
+            return workouts
+        else:
+            print(f"No workouts found for user {user_id}, returning mock data")
+            return mock_workouts
+            
+    except Exception as e:
+        # Log the error and return mock data as fallback
+        print(f"Error fetching workouts from database: {e}")
+        return mock_workouts
+
+    """
+    This check was causing a traceback because users is not defined so I commented it out
+    
     if user_id not in users:
         return workouts
     return workouts
-
+    """
+    
 
 def get_user_profile(user_id):
     """Returns information about the given user."""

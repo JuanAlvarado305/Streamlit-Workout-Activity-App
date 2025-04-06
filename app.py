@@ -48,7 +48,7 @@ def display_app_page():
         
         # User profile section in sidebar
         user_info = get_user_profile(userId)
-        st.subheader(f"Welcome, {user_info['full_name']}!")
+        st.subheader(f"Welcome, {user_info['Name']}!")
         st.markdown("---")
         
         # Navigation options
