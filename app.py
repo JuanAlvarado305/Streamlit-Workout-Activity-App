@@ -19,7 +19,8 @@ def display_app_page():
     """Displays the home page of the app."""
     
     # Add custom CSS focusing on making the activity summary taller
-    st.markdown("""
+    st.markdown(
+        """
     <style>
         .activity-summary-container {
             font-family: Arial, sans-serif;
@@ -38,7 +39,8 @@ def display_app_page():
             min-height: 550px !important;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """
+    , unsafe_allow_html=True)
     
     # Create the sidebar
     with st.sidebar:
