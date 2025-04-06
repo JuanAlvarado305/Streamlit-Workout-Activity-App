@@ -14,20 +14,21 @@ userId = 'user1'
 st.set_page_config(page_title="Home")
 
 def display_home_page():
+    """Displays the home page of the app containing recent user friends posts and genai advice."""
+
     users = get_users() 
     user_community = users[userId]['friends']
     all_community_posts = []
-    all_community_posts = generate_fake_data()
+    #all_community_posts = generate_fake_posts()
 
     st.title('Welcome to the Spaghetti Crew Workout App!')
 
     # First 10 posts from a user’s friends ordered by timestamp
     st.header('Your Community') 
-    # for user in user_community:
-    #     all_community_posts.extend(get_user_posts(user))
+    for user in user_community:
+        all_community_posts.extend(get_user_posts(user))
 
     all_community_posts.sort(reverse=True, key=lambda post: post['timestamp']) #sort list of posts by timestamp
-    #print(all_community_posts)
 
     # display 10 posts from user's friends
     for post in all_community_posts[:10]:
@@ -37,7 +38,6 @@ def display_home_page():
     st.markdown("---")
 
     # One piece of GenAI advice and encouragement
-    # ToDo: modify get_ai_advce to implement AI advice
     motivate(userId)
 
 def display_app_page():
@@ -100,7 +100,7 @@ def motivate(userId):
     image = result['image']
     display_genai_advice(timestamp, content, image)
 
-def generate_fake_data(): # written by AI
+def generate_fake_posts(): # written by AI
     import datetime
     import random
 
@@ -139,7 +139,7 @@ def generate_fake_data(): # written by AI
             'image': image_url,
         })
     return posts
-    
+
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
     display_home_page()
