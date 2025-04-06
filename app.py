@@ -11,10 +11,7 @@ from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get
 
 userId = 'user1'
 
-st.set_page_config(
-    page_title="Home",
-    page_icon="🏋️",
-)
+st.set_page_config(page_title="Home")
 
 def display_home_page():
     users = get_users() 
