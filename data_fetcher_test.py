@@ -16,14 +16,19 @@ from data_fetcher import (
     get_user_workouts,
 )
 
+# Create fake credentials for authentication patching
+fake_credentials = MagicMock()
+fake_credentials.universe_domain = "googleapis.com"
+
 
 class TestDataFetcher(unittest.TestCase):
     def test_foo(self):
         pass
-
+       
 
 class TestGetUserProfile(unittest.TestCase):
     """Tests the get_user_profile function."""
+    
     @patch("data_fetcher.bigquery.Client")
     def test_get_user_profile_with_friends(self, mock_client_class):
         mock_client = MagicMock()
@@ -75,12 +80,13 @@ class TestGetUserProfile(unittest.TestCase):
 
 class TestGetUserPosts(unittest.TestCase):
     """Tests the get_user_posts function."""
+    
     @patch("data_fetcher.bigquery.Client")
     def test_get_user_posts_valid(self, mock_client_class):
         """Returns a list of posts from a userID"""
         mock_client = MagicMock()
         mock_query_job = MagicMock()
-        moch_result = [
+        mock_result = [
             {
                 "PostId": "post1",
                 "AuthorId": "user1",
@@ -89,7 +95,7 @@ class TestGetUserPosts(unittest.TestCase):
                 "Content": "Hello World"
             }
         ]
-        mock_query_job.result.return_value = moch_result
+        mock_query_job.result.return_value = mock_result
         mock_client.query.return_value = mock_query_job
         mock_client_class.return_value = mock_client
 
@@ -124,6 +130,7 @@ class TestGetUserPosts(unittest.TestCase):
 
 class TestGetUserSensorData(unittest.TestCase):
     """Tests the get_user_sensor_data function."""
+    
     @patch("data_fetcher.bigquery.Client")
     def test_get_user_sensor_data_valid(self, mock_client_class):
         mock_client = MagicMock()
@@ -180,9 +187,14 @@ class TestGetUserSensorData(unittest.TestCase):
 
 class TestGetGenaiAdvice(unittest.TestCase):
     """Tests the get_genai_advice function which uses Vertex AI and aggregated workout data."""
+    
+    @patch("google.auth.default", return_value=(fake_credentials, "fake-project"))
     @patch("data_fetcher.get_user_profile")
     @patch("data_fetcher.get_user_daily_workout_data")
-    def test_get_genai_advice_valid(self, mock_get_daily, mock_get_user_profile):
+    @patch("vertexai.init", return_value=None)
+    @patch("vertexai.generative_models.GenerativeModel")
+    def test_get_genai_advice_valid(self, mock_gen_model, mock_vertexai_init,
+                                    mock_get_daily, mock_get_user_profile, mock_auth_default):
         # Setup user profile and daily workout data.
         mock_get_user_profile.return_value = {"full_name": "Alice Johnson", "username": "alicej"}
         mock_get_daily.return_value = {
@@ -192,34 +204,33 @@ class TestGetGenaiAdvice(unittest.TestCase):
             "advice_timestamp": "2024-07-29 08:00:00"
         }
         
-        # Setup fake Vertex AI response with valid JSON advice list.
+        # Configure fake Vertex AI response with valid JSON advice list.
         fake_response = MagicMock()
         fake_candidate = MagicMock()
         fake_candidate.content.text = '["Great job today, alicej!", "Keep up the good work, alicej!"]'
         fake_response.candidates = [fake_candidate]
         
+        # Create a mock model instance.
         fake_model_instance = MagicMock()
         fake_model_instance.generate_content.return_value = fake_response
+        mock_gen_model.return_value = fake_model_instance
 
-        with patch.dict(get_genai_advice.__globals__, {"vertexai": MagicMock()}):
-            fake_vertexai = get_genai_advice.__globals__["vertexai"]
-            fake_vertexai.init.return_value = None
-            fake_vertexai.generative_models = MagicMock()
-            fake_vertexai.generative_models.GenerativeModel.return_value = fake_model_instance
-
-            result = get_genai_advice("user1")
-            
-            self.assertIn("advice_id", result)
-            self.assertIn("timestamp", result)
-            self.assertIn("content", result)
-            self.assertIn("image", result)
-            self.assertEqual(result["timestamp"], "2024-07-29 08:00:00")
-            self.assertTrue(result["content"])
-            self.assertIn("alicej", result["content"].lower())
+        result = get_genai_advice("user1")
+        self.assertIn("advice_id", result)
+        self.assertIn("timestamp", result)
+        self.assertIn("content", result)
+        self.assertIn("image", result)
+        self.assertEqual(result["timestamp"], "2024-07-29 08:00:00")
+        self.assertTrue(result["content"])
+        self.assertIn("alicej", result["content"].lower())
     
+    @patch("google.auth.default", return_value=(fake_credentials, "fake-project"))
     @patch("data_fetcher.get_user_profile")
     @patch("data_fetcher.get_user_daily_workout_data")
-    def test_get_genai_advice_fallback(self, mock_get_daily, mock_get_user_profile):
+    @patch("vertexai.init", return_value=None)
+    @patch("vertexai.generative_models.GenerativeModel")
+    def test_get_genai_advice_fallback(self, mock_gen_model, mock_vertexai_init,
+                                        mock_get_daily, mock_get_user_profile, mock_auth_default):
         mock_get_user_profile.return_value = {"full_name": "Alice Johnson", "username": "alicej"}
         mock_get_daily.return_value = {
             "distance": 5.0,
@@ -228,6 +239,7 @@ class TestGetGenaiAdvice(unittest.TestCase):
             "advice_timestamp": "2024-07-29 08:00:00"
         }
         
+        # Configure fake Vertex AI response with invalid JSON to trigger fallback.
         fake_response = MagicMock()
         fake_candidate = MagicMock()
         fake_candidate.content.text = "invalid json"
@@ -235,17 +247,12 @@ class TestGetGenaiAdvice(unittest.TestCase):
         
         fake_model_instance = MagicMock()
         fake_model_instance.generate_content.return_value = fake_response
+        mock_gen_model.return_value = fake_model_instance
 
-        with patch.dict(get_genai_advice.__globals__, {"vertexai": MagicMock()}):
-            fake_vertexai = get_genai_advice.__globals__["vertexai"]
-            fake_vertexai.init.return_value = None
-            fake_vertexai.generative_models = MagicMock()
-            fake_vertexai.generative_models.GenerativeModel.return_value = fake_model_instance
-
-            result = get_genai_advice("user1")
-            self.assertTrue(result["content"])
-            self.assertIn("alicej", result["content"].lower())
-            self.assertEqual(result["timestamp"], "2024-07-29 08:00:00")
+        result = get_genai_advice("user1")
+        self.assertTrue(result["content"])
+        self.assertIn("alicej", result["content"].lower())
+        self.assertEqual(result["timestamp"], "2024-07-29 08:00:00")
 
 
 if __name__ == "__main__":
