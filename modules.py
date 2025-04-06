@@ -229,6 +229,7 @@ def display_genai_advice(timestamp, content, image):
             display: flex;
             justify-content: center;
             align-items: center;
+            background: linear-gradient(to bottom right, #6dd5fa, #2980b9);
         }}
 
         .image {{
@@ -265,7 +266,7 @@ def display_genai_advice(timestamp, content, image):
     </style>
 
     <div class="custom-component-container">
-        <img class="image" src="{image}" alt="Motivation">
+        <img class="image" src="{image}" alt="">
         <p class="content">{safe_content}</p>
         <p class="time">{safe_timestamp}</p>
     </div>
@@ -611,3 +612,4 @@ def display_user_sensor_data(sensor_data_list):
                 st.info(f"The {selected_sensor} values showed an increasing trend of approximately {change_pct:.1f}% from start to finish.")
             else:
                 st.info(f"The {selected_sensor} values showed a decreasing trend of approximately {abs(change_pct):.1f}% from start to finish.")
+                

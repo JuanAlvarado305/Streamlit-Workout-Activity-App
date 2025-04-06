@@ -2,3 +2,4 @@ streamlit
 google-cloud-bigquery
 pandas
 plotly
+vertexai

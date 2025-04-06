@@ -11,7 +11,6 @@
 import random
 from google.cloud import bigquery
 
-
 users = {
     'user1': {
         'full_name': 'Remi',
@@ -58,15 +57,9 @@ def get_user_sensor_data(user_id, workout_id):
     since each workout is uniquely associated with one user.
     """
     from google.cloud import bigquery
-    
-    # Use your actual project ID and dataset name. Here, we assume:
-    # Project ID: "roberttechx25"
-    # Dataset (or COURSE_CODE): "ISE"
     project_id = "roberttechx25"
     dataset = "ISE"
-    
     client = bigquery.Client(project=project_id)
-    
     query = f"""
         SELECT
             st.Name AS sensor_type,
@@ -79,18 +72,14 @@ def get_user_sensor_data(user_id, workout_id):
         WHERE sd.WorkoutID = @workout_id
         ORDER BY sd.Timestamp
     """
-    
     query_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("workout_id", "STRING", workout_id)
         ]
     )
-    
     query_job = client.query(query, job_config=query_config)
     sensor_data = [dict(row) for row in query_job.result()]
-    
     return sensor_data
-
 
 
 def get_user_workouts(user_id):
@@ -123,17 +112,13 @@ def get_user_workouts(user_id):
 
 def get_user_profile(user_id):
     """Returns information about the given user."""
-
     client = bigquery.Client(project="roberttechx25")
-
-    # CHANGED: Updated query to use parameter placeholder @user_id
-    # Also aliased u.ImageUrl as profile_image to match what modules.py expects.
     query = """
         SELECT
             u.name AS full_name,  
             u.username,
             u.DateOfBirth,
-            u.ImageUrl AS profile_image,  -- CHANGED: aliasing ImageUrl as profile_image
+            u.ImageUrl AS profile_image,
             ARRAY_AGG(f.UserId2 IGNORE NULLS) AS friends
         FROM `roberttechx25.ISE.Users` AS u
         LEFT JOIN `roberttechx25.ISE.Friends` AS f
@@ -141,17 +126,13 @@ def get_user_profile(user_id):
         WHERE u.UserId = @user_id
         GROUP BY u.name, u.username, u.DateOfBirth, u.ImageUrl
     """
-    # This query was created with the assistance of ChatGPT
-
     query_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
         ]
     )
-
     query_job = client.query(query, job_config=query_config)
     results = list(query_job.result())
-
     if results:
         return dict(results[0])
     else:
@@ -160,61 +141,167 @@ def get_user_profile(user_id):
 
 def get_user_posts(user_id):
     """Returns a list of a user's posts."""
-
-    # CHANGED: Specify the project in the client instantiation.
     client = bigquery.Client(project="roberttechx25")
-
-    # CHANGED: Updated query to use parameter placeholder @user_id and alias AuthorId.
     query = """
         SELECT *, AuthorId as user_id_alias
         FROM `roberttechx25.ISE.Posts`
         WHERE AuthorId = @user_id
         ORDER BY timestamp DESC
     """
-
     query_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
         ]
-    )  # This part was created with the assistance of ChatGPT
-
+    )
     query_job = client.query(query, job_config=query_config)
     results = query_job.result()
     posts = [dict(row) for row in results]
-    # CHANGED: Ensure that each post dictionary includes a 'user_id' key.
     for post in posts:
         if 'user_id_alias' in post:
             post['user_id'] = post.pop('user_id_alias')
-        # CHANGED: If 'timestamp' is missing, provide a default value that matches the format.
         if 'timestamp' not in post:
-            post['timestamp'] = "1970-01-01 00:00:00"  # CHANGED: Default valid timestamp
-        # CHANGED: If 'content' is missing, provide a default value.
+            post['timestamp'] = "1970-01-01 00:00:00"
         if 'content' not in post:
             post['content'] = "No Content Available"
-        # CHANGED: If 'image' is missing, provide a default value.
         if 'image' not in post:
             post['image'] = None
     return posts
 
 
-def get_genai_advice(user_id):
-    """Returns the most recent advice from the genai model.
-
-    This function currently returns random data. You will re-write it in Unit 3.
+###############################
+# New helper function for GenAI advice
+###############################
+def get_user_daily_workout_data(user_id) -> dict:
     """
-    advice = random.choice([
-        'Your heart rate indicates you can push yourself further. You got this!',
-        "You're doing great! Keep up the good work.",
-        'You worked hard yesterday, take it easy today.',
-        'You have burned 100 calories so far today!',
-    ])
-    image = random.choice([
-        'https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        None,
-    ])
+    Retrieves the user's workout data for today (or for the most recent workout),
+    aggregates relevant metrics, and returns a summary.
+    
+    Returns a dictionary with:
+        - distance: Total distance (km)
+        - steps: Total steps
+        - calories: Total calories burned
+        - advice_timestamp: The most recent EndTimestamp in "YYYY-MM-DD HH:MM:SS" format
+    """
+    client = bigquery.Client(project="roberttechx25")
+    query = f"""
+        SELECT 
+          StartTimestamp, 
+          EndTimestamp, 
+          TotalDistance, 
+          TotalSteps, 
+          CaloriesBurned
+        FROM `roberttechx25.ISE.Workouts`
+        WHERE UserId = '{user_id}'
+          AND DATE(EndTimestamp) = CURRENT_DATE()
+        ORDER BY EndTimestamp DESC
+    """
+    job = client.query(query)
+    results = list(job.result())
+    if not results:
+        return {
+            "distance": 0.0,
+            "steps": 0,
+            "calories": 0,
+            "advice_timestamp": "1970-01-01 00:00:00"
+        }
+    
+    total_distance = 0.0
+    total_steps = 0
+    total_calories = 0
+    most_recent_end = None
+    for row in results:
+        total_distance += row["TotalDistance"] or 0
+        total_steps += row["TotalSteps"] or 0
+        total_calories += row["CaloriesBurned"] or 0
+        end_ts = row["EndTimestamp"]
+        if most_recent_end is None or end_ts > most_recent_end:
+            most_recent_end = end_ts
+    advice_timestamp = most_recent_end.strftime("%Y-%m-%d %H:%M:%S") if most_recent_end else "1970-01-01 00:00:00"
     return {
-        'advice_id': 'advice1',
-        'timestamp': '2024-01-01 00:00:00',
-        'content': advice,
-        'image': image,
+        "distance": total_distance,
+        "steps": total_steps,
+        "calories": total_calories,
+        "advice_timestamp": advice_timestamp
     }
+
+
+def get_genai_advice(user_id):
+    """
+    Returns a piece of motivational advice from Vertex AI based on the user's data.
+    
+    This function:
+      1. Retrieves user data and the aggregated daily workout data.
+      2. Constructs a personalized prompt including workout metrics using the user's username.
+      3. Calls Vertex AI to generate multiple pieces of advice.
+      4. Randomly selects one piece of advice and, if it doesn't include the user's username, appends the username.
+      5. Randomly decides on an image.
+      6. Returns a dictionary with keys: advice_id, timestamp, content, and image.
+    """
+    import vertexai
+    import json
+    import random
+    from vertexai.generative_models import GenerativeModel, GenerationConfig
+
+    user_data = get_user_profile(user_id)
+    username = user_data.get("username", "User")
+
+    daily_data = get_user_daily_workout_data(user_id)
+    total_distance = daily_data["distance"]
+    total_steps = daily_data["steps"]
+    total_calories = daily_data["calories"]
+    advice_timestamp = daily_data["advice_timestamp"]
+
+    # Construct a detailed prompt that includes the user's workout metrics.
+    prompt = (
+        f"User {username} has just finished their workout today, covering {total_distance:.1f} km, "
+        f"taking {total_steps} steps, and burning {total_calories} calories. Provide a JSON array of 4 unique, "
+        f"concise motivational advices. Each advice should be a single sentence that acknowledges these metrics, "
+        f"offers personalized encouragement, and ideally references at least one of these workout details."
+    )
+
+    PROJECT_ID = "roberttechx25"
+    RESPONSE_SCHEMA = {
+        "type": "array",
+        "items": {"type": "string"}
+    }
+    vertexai.init(project=PROJECT_ID, location="us-central1")
+    model = GenerativeModel("gemini-1.5-flash-002")
+    generation_config = GenerationConfig(
+        response_mime_type="application/json",
+        response_schema=RESPONSE_SCHEMA,
+        temperature=0.7,
+        max_output_tokens=100
+    )
+    response = model.generate_content(prompt, generation_config=generation_config)
+
+    def parse_response_to_advice(response_obj) -> list:
+        try:
+            raw = response_obj.candidates[0].content.text
+            advices = json.loads(raw)
+            if isinstance(advices, list):
+                return advices
+        except Exception:
+            return []
+    advices = parse_response_to_advice(response)
+    
+    fallback = f"Keep pushing forward, {username}—every step counts!"
+    if not advices:
+        chosen_advice = fallback
+    else:
+        chosen_advice = random.choice(advices)
+        # Instead of replacing the advice if username is missing, we append it.
+        if username not in chosen_advice:
+            chosen_advice = f"{chosen_advice} - {username}"
+
+    image = random.choice([
+        "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3",
+        None
+    ])
+
+    return {
+        "advice_id": "advice1",
+        "timestamp": advice_timestamp,
+        "content": chosen_advice,
+        "image": image,
+    }
+    
