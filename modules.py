@@ -273,12 +273,6 @@ def display_genai_advice(timestamp, content, image):
     st.markdown(html_code, unsafe_allow_html=True)
 
 
-def insert_post(user_id, content):
-    """Inserts a new post into the database."""
-    # Replace this with actual database insertion logic
-    print(f"Inserting post for user {user_id} with content: {content}")
-    st.write("Post inserted (placeholder)")
-
 def display_recent_workouts(workouts_list):
     """Displays a list of recent workouts with detailed information.
     
