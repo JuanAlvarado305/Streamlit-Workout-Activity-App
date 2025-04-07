@@ -6,152 +6,32 @@
 #############################################################################
 
 import streamlit as st
-import datetime
+# Set page to wide mode - add this at the very beginning, before any other st commands
+st.set_page_config(layout="wide")
+
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
-#from activity_page import activity_page
+from activity_page import activity_page_content  # Import function instead of module
 
-# users = {
-#     'user1': {
-#         'full_name': 'Remi',
-#         'username': 'remi_the_rems',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user2', 'user3', 'user4'],
-#     },
-#     'user2': {
-#         'full_name': 'Blake',
-#         'username': 'blake',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user1'],
-#     },
-#     'user3': {
-#         'full_name': 'Jordan',
-#         'username': 'jordanjordanjordan',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user1', 'user4'],
-#     },
-#     'user4': {
-#         'full_name': 'Gemmy',
-#         'username': 'gems',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user1', 'user3'],
-#     },
-# }
+# Create a session state variable to track the current page
+if 'page' not in st.session_state:
+    st.session_state.page = 'home'
 
-# Set page to wide mode - add this at the very beginning, before any other st commands
-st.set_page_config(page_title="Home", layout="wide")
+# Function to navigate to activity page
+def nav_to_activity():
+    st.session_state.page = 'activity'
+    st.rerun()  # Use st.rerun() instead of experimental_rerun
+
+# Function to navigate back to home
+def nav_to_home():
+    st.session_state.page = 'home'
+    st.rerun()  # Use st.rerun() instead of experimental_rerun
+
 userId = 'user1'
 
-def display_home_page():
-    """Displays the home page of the app containing recent user friends posts and genai advice."""
-
-    with st.sidebar:        
-        # User profile section in sidebar
-        user_info = get_user_profile(userId)
-        st.header(f"Welcome, {user_info['Name']}!")
-        #st.markdown("---")
-        
-        # Navigation options
-        # st.subheader("Sections")
-        # st.markdown("• [Activity Summary](#activity-summary)")
-        # st.markdown("• [Recent Workouts](#recent-workouts)")
-        # st.markdown("• [User Posts](#user-posts)")
-        # st.markdown("• [Motivational Quote](#motivational-quote)")
-        
-        # Add the activity page link
-        # st.markdown("---")
-        # st.markdown("[Go to Activity Page](activity_page)")
-        
-        # Maybe add quick stats in sidebar
-        st.markdown("---")
-        st.subheader("Quick Stats")
-        user_workouts = get_user_workouts(userId)
-        st.metric("Total Workouts", len(user_workouts))
-        st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
-        
-        #Team Members 
-        st.markdown("---")
-        st.subheader("Spaghetti Crew Team")
-        st.markdown("Juan")
-        st.markdown("Jona")
-        st.markdown("Foluso")
-        st.markdown("Loie")
-
-    #get all users
-    #gets the list of the user's friends
-    #get all friends posts
-
-    st.title('Welcome to the Spaghetti Crew Workout App!')
-
-    # First 10 posts from a user’s friends ordered by timestamp
-    st.header('Your Community') 
-
-    for num in range(10): #placeholder posts to check display
-        display_post({'PostId': 'post1', 'AuthorId': 'user1', 'Timestamp': datetime.datetime(2024, 7, 29, 12, 0), 'ImageUrl': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8', 'Content': 'This is a placeholder! hey hey hey'})
-        st.markdown('---')
-
-    # for user in user_community:
-    #     all_community_posts.extend(get_user_posts(user))
-    #     #all_community_posts.append(get_user_posts(userId))
-    
-    # #{'PostId': 'post1', 'AuthorId': 'user1', 'Timestamp': datetime.datetime(2024, 7, 29, 12, 0), 'ImageUrl': 'http://example.com/posts/post1.jpg', 'Content': None}
-
-    # #formatted_timestamp = post['Timestamp'].strftime('%Y-%m-%d %H:%M:%S')
-    # #all_community_posts.sort(reverse=True, key=lambda post: post['Timestamp']) #sort list of posts by timestamp
-
-    # # display 10 posts from user's friends
-    # for post in all_community_posts[:10]:
-    #     if isinstance(post['Timestamp'], datetime.datetime):
-    #         post['Timestamp'] = post['Timestamp'].strftime('%Y-%m-%d %H:%M:%S')
-    #     display_post(post)
-    #     st.markdown("---")  # Adds a separator between posts
-    
-    st.markdown('You have viewed all recent community posts.')
-    st.markdown("---")
-
-    # One piece of GenAI advice and encouragement
-    motivate(userId)
-
 def display_app_page():
-    # Create the sidebar
-    with st.sidebar:
-        st.title("Main Menu")
-        
-        # User profile section in sidebar
-        user_info = get_user_profile(userId)
-        st.subheader(f"Welcome, {user_info['Name']}!")
-        st.markdown("---")
-        
-        # Navigation options
-        st.subheader("Sections")
-        st.markdown("• [Activity Summary](#activity-summary)")
-        st.markdown("• [Recent Workouts](#recent-workouts)")
-        st.markdown("• [User Posts](#user-posts)")
-        st.markdown("• [Motivational Quote](#motivational-quote)")
-        
-        # Add the activity page link
-        st.markdown("---")
-        st.markdown("[Go to Activity Page](activity_page)")
-        
-        # Maybe add quick stats in sidebar
-        st.markdown("---")
-        st.subheader("Quick Stats")
-        user_workouts = get_user_workouts(userId)
-        st.metric("Total Workouts", len(user_workouts))
-        st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
-        
-        #Team Members 
-        st.markdown("---")
-        st.subheader("Spaghetti Crew Team")
-        st.markdown("Juan")
-        st.markdown("Jona")
-        st.markdown("Foluso")
-        st.markdown("Loie")
-
+    """Displays the home page of the app."""
+    
     # Add custom CSS focusing on making the activity summary taller
     st.markdown(
         """
@@ -175,6 +55,42 @@ def display_app_page():
     </style>
     """
     , unsafe_allow_html=True)
+    
+    # Create the sidebar
+    with st.sidebar:
+        st.title("Main Menu")
+        
+        # User profile section in sidebar
+        user_info = get_user_profile(userId)
+        st.subheader(f"Welcome, {user_info['Name']}!")
+        st.markdown("---")
+        
+        # Navigation options
+        st.subheader("Sections")
+        st.markdown("• [Activity Summary](#activity-summary)")
+        st.markdown("• [Recent Workouts](#recent-workouts)")
+        st.markdown("• [User Posts](#user-posts)")
+        st.markdown("• [Motivational Quote](#motivational-quote)")
+        
+        # Add the activity page button (replacing the markdown link)
+        st.markdown("---")
+        if st.button("Go to Activity Page"):
+            nav_to_activity()
+        
+        # Maybe add quick stats in sidebar
+        st.markdown("---")
+        st.subheader("Quick Stats")
+        user_workouts = get_user_workouts(userId)
+        st.metric("Total Workouts", len(user_workouts))
+        st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
+        
+        #Team Memebers 
+        st.markdown("---")
+        st.subheader("Spaghetti Crew Team")
+        st.markdown("Juan")
+        st.markdown("Jona")
+        st.markdown("Foluso")
+        st.markdown("Loie")
 
     # Main content area
     st.title('Welcome to the Spaghetti Crew Workout App!')
@@ -235,7 +151,6 @@ def motivate(userId):
         userId (int or str): The identifier for the user for whom the motivational advice is retrieved.
     """
     result = get_genai_advice(userId)
-    print(result)
     timestamp = result['timestamp']
     content = result['content']
     image = result['image']
@@ -243,5 +158,12 @@ def motivate(userId):
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
-    display_home_page()
-    #display_app_page()
+    # Check the current page and display appropriate content
+    if st.session_state.page == 'home':
+        display_app_page()
+    elif st.session_state.page == 'activity':
+        # Add a "Back to Home" button at the top of the page
+        if st.button("Return to Home"):
+            nav_to_home()
+        # Display activity page content
+        activity_page_content()
