@@ -11,6 +11,8 @@
 import random
 from google.cloud import bigquery
 
+def get_users():
+    return users
 
 def get_user_sensor_data(user_id, workout_id):
     """Returns a list of timestampped information for a given workout.

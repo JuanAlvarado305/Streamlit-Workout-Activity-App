@@ -10,10 +10,38 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_users
 from activity_page import activity_page
 
 userId = 'user1'
+
+st.set_page_config(page_title="Home")
+
+def display_home_page():
+    """Displays the home page of the app containing recent user friends posts and genai advice."""
+
+    users = get_users() 
+    user_community = users[userId]['friends']
+    all_community_posts = []
+
+    st.title('Welcome to the Spaghetti Crew Workout App!')
+
+    # First 10 posts from a user’s friends ordered by timestamp
+    st.header('Your Community') 
+    for user in user_community:
+        all_community_posts.extend(get_user_posts(user))
+
+    all_community_posts.sort(reverse=True, key=lambda post: post['timestamp']) #sort list of posts by timestamp
+
+    # display 10 posts from user's friends
+    for post in all_community_posts[:10]:
+        display_post(post)
+        st.markdown("---")  # Adds a separator between posts
+    st.markdown('You have viewed all recent community posts.')
+    st.markdown("---")
+
+    # One piece of GenAI advice and encouragement
+    motivate(userId)
 
 def display_app_page():
     """Displays the home page of the app."""
@@ -143,4 +171,5 @@ def motivate(userId):
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
-    display_app_page()
+    display_home_page()
+    #display_app_page()
