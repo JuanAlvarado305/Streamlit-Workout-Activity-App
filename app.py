@@ -11,39 +11,8 @@ from modules import display_my_custom_component, display_post, display_genai_adv
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 #from activity_page import activity_page
 
-# users = {
-#     'user1': {
-#         'full_name': 'Remi',
-#         'username': 'remi_the_rems',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user2', 'user3', 'user4'],
-#     },
-#     'user2': {
-#         'full_name': 'Blake',
-#         'username': 'blake',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user1'],
-#     },
-#     'user3': {
-#         'full_name': 'Jordan',
-#         'username': 'jordanjordanjordan',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user1', 'user4'],
-#     },
-#     'user4': {
-#         'full_name': 'Gemmy',
-#         'username': 'gems',
-#         'date_of_birth': '1990-01-01',
-#         'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-#         'friends': ['user1', 'user3'],
-#     },
-# }
-
-# Set page to wide mode - add this at the very beginning, before any other st commands
-st.set_page_config(page_title="Home", layout="wide")
+# Set page configuration - add this at the very beginning, before any other st commands
+st.set_page_config(page_title="Home")
 userId = 'user1'
 
 def display_home_page():
@@ -81,7 +50,6 @@ def display_home_page():
         st.markdown("Foluso")
         st.markdown("Loie")
 
-    #get all users
     #gets the list of the user's friends
     #get all friends posts
 
@@ -116,7 +84,7 @@ def display_home_page():
     # One piece of GenAI advice and encouragement
     motivate(userId)
 
-def display_app_page():
+def display_app_page(): #not called in main
     # Create the sidebar
     with st.sidebar:
         st.title("Main Menu")

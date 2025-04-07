@@ -32,7 +32,7 @@ def activity_page():
 
     # Create the sidebar
     with st.sidebar:
-        st.title("Main Menu")
+        #st.title("Main Menu")
         
         # User profile section in sidebar
         user_info = get_user_profile(userId)
@@ -43,8 +43,8 @@ def activity_page():
         st.subheader("Sections")
         st.markdown("• [Activity Summary](#activity-summary)")
         st.markdown("• [Recent Workouts](#recent-workouts)")
-        st.markdown("• [User Posts](#user-posts)")
-        st.markdown("• [Motivational Quote](#motivational-quote)")
+        # st.markdown("• [User Posts](#user-posts)")
+        # st.markdown("• [Motivational Quote](#motivational-quote)")
         
         # Add the activity page link
         # st.markdown("---")
