@@ -50,17 +50,17 @@ def display_home_page():
         st.markdown("Foluso")
         st.markdown("Loie")
 
-    #gets the list of the user's friends
-    #get all friends posts
-
     st.title('Welcome to the Spaghetti Crew Workout App!')
 
     # First 10 posts from a user’s friends ordered by timestamp
     st.header('Your Community') 
 
     for num in range(10): #placeholder posts to check display
-        display_post({'PostId': 'post1', 'AuthorId': 'user1', 'Timestamp': datetime.datetime(2024, 7, 29, 12, 0), 'ImageUrl': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8', 'Content': 'This is a placeholder! hey hey hey'})
+        display_post({'PostId': 'post1', 'AuthorId': 'user1', 'Timestamp': datetime.datetime(2024, 7, 29, 12, 0), 'ImageUrl': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8', 'Content': 'This is a placeholder!'})
         st.markdown('---')
+
+    #gets the list of the user's friends
+    #get all friends posts
 
     # for user in user_community:
     #     all_community_posts.extend(get_user_posts(user))
@@ -203,7 +203,6 @@ def motivate(userId):
         userId (int or str): The identifier for the user for whom the motivational advice is retrieved.
     """
     result = get_genai_advice(userId)
-    print(result)
     timestamp = result['timestamp']
     content = result['content']
     image = result['image']
