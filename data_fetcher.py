@@ -9,6 +9,7 @@
 #############################################################################
 
 import random
+import datetime
 from google.cloud import bigquery
 
 def get_user_sensor_data(user_id, workout_id):
@@ -158,14 +159,19 @@ def get_user_profile(user_id):
     else:
         return {}
 
-
 def get_user_posts(user_id):
-    """Returns a list of a user's posts."""
+    """Returns a list of a specific user's posts, ordered by timestamp descending."""
 
-    client = bigquery.Client(project="roberttechx25")
-
+    client = bigquery.Client(project=GCP_PROJECT_ID)
+    # Use f-string for table name
     query = f"""
-        SELECT * FROM `roberttechx25.ISE.Posts`
+        SELECT
+            PostId AS post_id,
+            AuthorId AS author_id,
+            Timestamp AS timestamp,
+            ImageUrl AS image_url,
+            Content AS content
+        FROM `{GCP_PROJECT_ID}.{DATASET_ID}.Posts`
         WHERE AuthorId = @user_id
         ORDER BY timestamp DESC
     """
@@ -174,12 +180,89 @@ def get_user_posts(user_id):
         query_parameters=[
             bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
         ]
-    ) #This part was created with the assistance of ChatGPT
+    ) # This part was created with the assistance of ChatGPT and modified
 
-    query_job = client.query(query, job_config=query_config)
-    results = query_job.result()
-    return [dict(row) for row in results]
+    try:
+        query_job = client.query(query, job_config=query_config)
+        results = query_job.result()
+        # Convert rows to dictionaries matching expected keys in display_post
+        return [
+            {
+                'PostId': row.post_id,
+                'AuthorId': row.author_id,
+                'Timestamp': row.timestamp,
+                'ImageUrl': row.image_url,
+                'Content': row.content
+             } for row in results]
+    except Exception as e:
+        print(f"Error fetching posts for user {user_id}: {e}")
+        return [] # Return empty list on error
 
+
+def get_friends_posts(user_id):
+    """Returns a list of posts from the user's friends, ordered by timestamp descending."""
+    client = bigquery.Client(project=GCP_PROJECT_ID)
+
+    # Query to get friends' posts
+    # Use f-strings for table names
+    query = f"""
+        SELECT
+            p.PostId AS post_id,
+            p.AuthorId AS author_id,
+            p.Timestamp AS timestamp,
+            p.ImageUrl AS image_url,
+            p.Content AS content,
+            u.Name AS author_name -- Include author's name for display
+        FROM `{GCP_PROJECT_ID}.{DATASET_ID}.Posts` AS p
+        JOIN `{GCP_PROJECT_ID}.{DATASET_ID}.Friends` AS f ON p.AuthorId = f.UserId2
+        JOIN `{GCP_PROJECT_ID}.{DATASET_ID}.Users` AS u ON p.AuthorId = u.UserId -- Join with Users to get name
+        WHERE f.UserId1 = @user_id -- Find posts where the author is a friend (UserId2) of the current user (UserId1)
+        ORDER BY p.Timestamp DESC
+    """
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    )
+
+    try:
+        query_job = client.query(query, job_config=query_config)
+        results = query_job.result()
+        # Convert rows to dictionaries matching expected keys in display_post, adding author_name
+        return [
+            {
+                'PostId': row.post_id,
+                'AuthorId': row.author_id,
+                'AuthorName': row.author_name, # Added author name
+                'Timestamp': row.timestamp,
+                'ImageUrl': row.image_url,
+                'Content': row.content
+             } for row in results]
+    except Exception as e:
+        print(f"Error fetching friends' posts for user {user_id}: {e}")
+        return [] # Return empty list on error
+
+# def get_user_posts(user_id):
+#     """Returns a list of a user's posts."""
+
+#     client = bigquery.Client(project="roberttechx25")
+
+#     query = f"""
+#         SELECT * FROM `roberttechx25.ISE.Posts`
+#         WHERE AuthorId = @user_id
+#         ORDER BY timestamp DESC
+#     """
+
+#     query_config = bigquery.QueryJobConfig(
+#         query_parameters=[
+#             bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+#         ]
+#     ) #This part was created with the assistance of ChatGPT
+
+#     query_job = client.query(query, job_config=query_config)
+#     results = query_job.result()
+#     return [dict(row) for row in results]
 
 
 def get_genai_advice(user_id):
