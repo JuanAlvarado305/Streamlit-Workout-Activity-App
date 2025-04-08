@@ -229,6 +229,7 @@ def display_genai_advice(timestamp, content, image):
             display: flex;
             justify-content: center;
             align-items: center;
+            background: linear-gradient(to bottom right, #6dd5fa, #2980b9);
         }}
 
         .image {{
@@ -265,7 +266,7 @@ def display_genai_advice(timestamp, content, image):
     </style>
 
     <div class="custom-component-container">
-        <img class="image" src="{image}" alt="Motivation">
+        <img class="image" src="{image}" alt="">
         <p class="content">{safe_content}</p>
         <p class="time">{safe_timestamp}</p>
     </div>
@@ -401,3 +402,218 @@ def display_recent_workouts(workouts_list):
         except (ValueError, KeyError, Exception) as e:
             # Handle potential errors gracefully
             st.error(f"Error displaying workout: {e}")
+
+def display_user_sensor_data(sensor_data_list):
+    """
+    Takes in the list of sensor data and displays it to the user using Streamlit components
+    with visualizations and interactive elements.
+    """
+    import streamlit as st
+    import pandas as pd
+    import plotly.express as px
+    import plotly.graph_objects as go
+    from datetime import datetime
+
+    if not sensor_data_list:
+        st.warning("No sensor data available for this workout.")
+        return
+
+    # Convert the sensor data list to a DataFrame for easier manipulation.
+    df = pd.DataFrame(sensor_data_list)
+
+    # Convert the 'timestamp' column to datetime (if not already)
+    if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+    # Extract unique sensor types.
+    sensor_types = df['sensor_type'].unique()
+
+    # CSS styling that adapts to light and dark mode.
+    st.markdown(
+        """
+        <style>
+            .header {
+                font-family: 'Source Sans Pro', sans-serif;
+                font-size: 32px;
+                font-weight: bold;
+                color: #0e1117;
+                margin-bottom: 20px;
+            }
+            .subheader {
+                font-family: 'Source Sans Pro', sans-serif;
+                font-size: 24px;
+                font-weight: bold;
+                color: #0e1117;
+                margin: 25px 0 15px;
+            }
+            .summary-box {
+                background-color: #f0f2f6;
+                color: #0e1117;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 25px;
+            }
+            .summary-item {
+                font-family: 'Source Sans Pro', sans-serif;
+                margin: 5px 0;
+                font-size: 16px;
+                color: #0e1117;
+            }
+            /* Dark mode styles */
+            @media (prefers-color-scheme: dark) {
+                .header {
+                    color: #ffffff;
+                }
+                .subheader {
+                    color: #ffffff;
+                }
+                .summary-box {
+                    background-color: #2c2c2c;
+                    color: #ffffff;
+                }
+                .summary-item {
+                    color: #ffffff;
+                }
+            }
+        </style>
+        """, unsafe_allow_html=True
+    )
+
+    # Add header using st.header (for testing and clarity)
+    st.header("Workout Sensor Data")
+    st.markdown("<div class='subheader'>Summary</div>", unsafe_allow_html=True)
+
+    workout_duration = (df['timestamp'].max() - df['timestamp'].min()).total_seconds() / 60
+    summary_html = f"""
+        <div class='summary-box'>
+            <div class='summary-item'>• <strong>Workout Duration</strong>: {workout_duration:.1f} minutes</div>
+            <div class='summary-item'>• <strong>Data Points Collected</strong>: {len(df)}</div>
+            <div class='summary-item'>• <strong>Sensors Used</strong>: {len(sensor_types)}</div>
+        </div>
+    """
+    st.markdown(summary_html, unsafe_allow_html=True)
+
+    # Create tabs for different views.
+    tab1, tab2, tab3 = st.tabs(["Charts", "Raw Data", "Insights"])
+
+    # Tab 1: Charts
+    with tab1:
+        st.markdown("<div class='subheader'>Sensor Data Visualization</div>", unsafe_allow_html=True)
+        selected_sensors = st.multiselect(
+            "Select sensors to display:",
+            options=list(sensor_types),
+            default=list(sensor_types)[:min(3, len(sensor_types))]
+        )
+        if selected_sensors:
+            filtered_df = df[df['sensor_type'].isin(selected_sensors)]
+            for sensor in selected_sensors:
+                sensor_df = filtered_df[filtered_df['sensor_type'] == sensor].sort_values("timestamp")
+                units = sensor_df['units'].iloc[0] if not sensor_df.empty else ""
+                st.markdown(f"<div class='subheader'>{sensor} ({units})</div>", unsafe_allow_html=True)
+                # Prepare data for st.line_chart by setting timestamp as the index.
+                sensor_chart_df = sensor_df.set_index("timestamp")[["data"]]
+                st.line_chart(sensor_chart_df)
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("Average", f"{sensor_df['data'].mean():.2f} {units}")
+                col2.metric("Maximum", f"{sensor_df['data'].max():.2f} {units}")
+                col3.metric("Minimum", f"{sensor_df['data'].min():.2f} {units}")
+                col4.metric("Readings", f"{len(sensor_df)}")
+
+    # Tab 2: Raw Data
+    with tab2:
+        st.markdown("<div class='subheader'>Raw Sensor Data</div>", unsafe_allow_html=True)
+        st.dataframe(df.sort_values('timestamp'))
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            "Download CSV",
+            csv,
+            "sensor_data.csv",
+            "text/csv",
+            key='download-csv'
+        )
+
+    # Tab 3: Insights
+    with tab3:
+        st.markdown("<div class='subheader'>Insights and Patterns</div>", unsafe_allow_html=True)
+        if len(sensor_types) > 1:
+            st.markdown("<div class='subheader'>Sensor Correlations</div>", unsafe_allow_html=True)
+            pivot_df = df.pivot_table(
+                index='timestamp',
+                columns='sensor_type',
+                values='data',
+                aggfunc='mean'
+            ).reset_index()
+            col1, col2 = st.columns(2)
+            with col1:
+                x_sensor = st.selectbox("Select X-axis sensor:", sensor_types, index=0)
+            with col2:
+                default_y_index = 1 if len(sensor_types) > 1 else 0
+                y_sensor = st.selectbox("Select Y-axis sensor:", sensor_types, index=default_y_index)
+            if x_sensor != y_sensor:
+                scatter_df = pivot_df.dropna(subset=[x_sensor, y_sensor])
+                if not scatter_df.empty:
+                    fig = px.scatter(
+                        scatter_df,
+                        x=x_sensor,
+                        y=y_sensor,
+                        trendline="ols",
+                        labels={
+                            x_sensor: f"{x_sensor} ({df[df['sensor_type'] == x_sensor]['units'].iloc[0]})",
+                            y_sensor: f"{y_sensor} ({df[df['sensor_type'] == y_sensor]['units'].iloc[0]})"
+                        },
+                        title=f"Relationship between {x_sensor} and {y_sensor}"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    corr = scatter_df[x_sensor].corr(scatter_df[y_sensor])
+                    st.metric("Correlation Coefficient", f"{corr:.3f}")
+                    if abs(corr) > 0.7:
+                        st.info("Strong correlation detected between these sensors.")
+                    elif abs(corr) > 0.4:
+                        st.info("Moderate correlation detected between these sensors.")
+                    else:
+                        st.info("Weak or no correlation detected between these sensors.")
+                else:
+                    st.warning("Not enough data points to analyze correlation between these sensors.")
+            else:
+                st.warning("Please select different sensors for comparison.")
+
+        st.markdown("<div class='subheader'>Time-Based Analysis</div>", unsafe_allow_html=True)
+        if len(df) > 10:
+            selected_sensor = st.selectbox("Select sensor for time analysis:", sensor_types)
+            sensor_df = df[df['sensor_type'] == selected_sensor]
+            units = sensor_df['units'].iloc[0] if not sensor_df.empty else ""
+            window_size = max(3, len(sensor_df) // 10)
+            sensor_df = sensor_df.sort_values('timestamp')
+            sensor_df['rolling_avg'] = sensor_df['data'].rolling(window=window_size, min_periods=1).mean()
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=sensor_df['timestamp'],
+                y=sensor_df['data'],
+                mode='markers',
+                name='Raw readings',
+                marker=dict(size=6)
+            ))
+            fig.add_trace(go.Scatter(
+                x=sensor_df['timestamp'],
+                y=sensor_df['rolling_avg'],
+                mode='lines',
+                name=f'{window_size}-point moving average',
+                line=dict(width=3)
+            ))
+            fig.update_layout(
+                title=f"{selected_sensor} Trend Analysis",
+                xaxis_title="Time",
+                yaxis_title=f"Value ({units})",
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            start_value = sensor_df['rolling_avg'].iloc[0]
+            end_value = sensor_df['rolling_avg'].iloc[-1]
+            change_pct = ((end_value - start_value) / start_value) * 100 if start_value != 0 else 0
+            if abs(change_pct) < 5:
+                st.info(f"The {selected_sensor} values remained relatively stable throughout the workout.")
+            elif change_pct > 0:
+                st.info(f"The {selected_sensor} values showed an increasing trend of approximately {change_pct:.1f}% from start to finish.")
+            else:
+                st.info(f"The {selected_sensor} values showed a decreasing trend of approximately {abs(change_pct):.1f}% from start to finish.")
+                

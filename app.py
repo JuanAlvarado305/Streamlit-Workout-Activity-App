@@ -9,7 +9,7 @@ import streamlit as st
 # Set page to wide mode - add this at the very beginning, before any other st commands
 st.set_page_config(layout="wide")
 
-from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
+from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 from activity_page import activity_page_content  # Import function instead of module
 
@@ -28,6 +28,7 @@ def nav_to_home():
     st.rerun()  # Use st.rerun() instead of experimental_rerun
 
 userId = 'user1'
+workoutId = 'workout1'  # Fixed variable name
 
 def display_app_page():
     """Displays the home page of the app."""
@@ -131,7 +132,14 @@ def display_app_page():
     for post in user_posts:
         display_post(post)
         st.markdown("---")  # Adds a separator between posts
+        
+    # Display a custom component example.
+    value = st.text_input('Enter your name')
+    display_my_custom_component(value)
 
+    # Fetch sensor data for the given workout and display it.
+    sensor_data = get_user_sensor_data(userId, workoutId)
+    display_user_sensor_data(sensor_data)
 
     # Display GenAI advice as part of the page with anchor
     st.markdown("<div id='motivational-quote'></div>", unsafe_allow_html=True)
