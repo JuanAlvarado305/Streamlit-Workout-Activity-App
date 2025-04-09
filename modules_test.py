@@ -20,8 +20,8 @@ class TestDisplayPost(unittest.TestCase):
 
     def setUp(self):
         self.mock_user = {
-            "Username": "test_user",
-            "ImageUrl": "https://picsum.photos/50/50"
+            "username": "test_user",
+            "profile_image": "https://picsum.photos/50/50"
         }
 
     def fake_get_user_profile(self, user_id):
@@ -50,13 +50,13 @@ class TestDisplayPost(unittest.TestCase):
 
             mock_container.assert_called_once()
             mock_columns.assert_called_once_with([1, 11])
-            mock_markdown.assert_any_call(f'<img src="{self.mock_user["ImageUrl"]}" class="profile-pic">', unsafe_allow_html=True)
+            mock_markdown.assert_any_call(f'<img src="{self.mock_user["profile_image"]}" class="profile-pic">', unsafe_allow_html=True)
 
             formatted_time = post["Timestamp"].strftime("%d %b %Y, %I:%M %p")
             mock_markdown.assert_any_call(
                 f"""
                 <div class="post-info">
-                    <strong>{self.mock_user["Username"]}</strong>
+                    <strong>{self.mock_user["username"]}</strong>
                     <span>{formatted_time}</span>
                 </div>
                 """,
