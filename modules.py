@@ -33,8 +33,8 @@ def display_post(post, get_user_data=get_user_profile):
     
     #Get User Data
     userData = get_user_data(post['AuthorId'])
-    username = userData['Username']
-    user_image = userData['ImageUrl']
+    username = userData['username']
+    user_image = userData['profile_image']
     timestamp = post['Timestamp']
     content = post['Content']
     post_image = post['ImageUrl']
