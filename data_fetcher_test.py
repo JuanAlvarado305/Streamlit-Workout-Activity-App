@@ -22,30 +22,55 @@ fake_credentials.universe_domain = "googleapis.com"
 
 class TestGetUserWorkouts(unittest.TestCase):
 
-    def test_get_user_workouts(self):
-        """Tests that get_user_workouts returns the correct sample data."""
-        workouts = get_user_workouts("user1")
-        
-        # Check that the function returns a list of workouts
-        self.assertIsInstance(workouts, list)
-        
-        # Check that the list contains the correct number of workouts
-        self.assertEqual(len(workouts), 3)
-        
-        # Check that the first workout has the correct data
-        self.assertEqual(workouts[0]['workout_id'], 'workout1')
-        self.assertEqual(workouts[0]['start_timestamp'], '2025-04-01 08:00:00')
-        self.assertEqual(workouts[0]['distance'], 5.2)
-        self.assertEqual(workouts[0]['steps'], 7500)
-        self.assertEqual(workouts[0]['calories_burned'], 350)
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_workouts_success(self, mock_client_class):
+        """Returns workout data from BigQuery if available."""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [
+            {
+                "workout_id": "bq_workout1",
+                "start_timestamp": "2025-04-01 08:00:00",
+                "end_timestamp": "2025-04-01 09:00:00",
+                "distance": 5.0,
+                "steps": 7000,
+                "calories_burned": 300,
+                "start_lat_lng": (0, 0),
+                "end_lat_lng": (0, 0)
+            }
+        ]
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
 
-    """
-    def test_get_user_workouts_empty(self):
-        Tests that get_user_workouts returns an empty list when the user has no workouts.
-        workouts = get_user_workouts("nonexistent_user")
-        self.assertEqual(len(workouts), 0)
-        
-    """
+        result = get_user_workouts("user123")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["workout_id"], "bq_workout1")
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_workouts_empty_result(self, mock_client_class):
+        """Returns mock data if BigQuery returns empty result."""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []  # Empty response
+
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_user_workouts("user_no_data")
+        self.assertEqual(len(result), 3)  # Length of mock_workouts
+        self.assertEqual(result[0]["workout_id"], "workout1")  # From mock data
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_user_workouts_with_error(self, mock_client_class):
+        """Returns mock data if BigQuery throws an exception."""
+        mock_client = MagicMock()
+        mock_client.query.side_effect = Exception("BigQuery failed")
+
+        mock_client_class.return_value = mock_client
+
+        result = get_user_workouts("user_error")
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[1]["workout_id"], "workout2")  # From mock data
        
 
 class TestGetUserProfile(unittest.TestCase):
