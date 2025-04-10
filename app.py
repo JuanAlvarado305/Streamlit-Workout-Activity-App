@@ -76,13 +76,13 @@ def display_home_page():
                 st.markdown('You have viewed all recent community posts.')
 
     #keyError
-    except Exception as e:
-        st.error(f"Could not load community posts: {e}")
-        # Display placeholder posts as a fallback during development/error
-        st.subheader("Sample Posts:")
-        for num in range(3): # Display a few placeholders on error
-            display_post({'post_id': f'error_post{num}', 'author_id': 'user_error', 'username': 'error', 'timestamp': datetime.datetime.now(), 'image_url': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8', 'content': 'Error loading post. This is placeholder content.'})
-            st.markdown('---')
+    # except Exception as e:
+    #     st.error(f"Could not load community posts: {e}")
+    #     # Display placeholder posts as a fallback during development/error
+    #     st.subheader("Sample Posts:")
+    #     for num in range(3): # Display a few placeholders on error
+    #         display_post({'post_id': f'error_post{num}', 'author_id': 'user_error', 'username': 'error', 'timestamp': datetime.datetime.now(), 'image_url': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8', 'content': 'Error loading post. This is placeholder content.'})
+    #         st.markdown('---')
 
     st.markdown("---") # Separator before GenAI advice
 
