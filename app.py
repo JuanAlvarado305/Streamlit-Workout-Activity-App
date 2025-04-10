@@ -103,9 +103,14 @@ def display_home_page():
 
     st.markdown("---") # Separator before GenAI advice
 
-    # Display one piece of GenAI advice and encouragement
+    # Fetch sensor data for the given workout and display it.
+    sensor_data = get_user_sensor_data(userId, workoutId)
+    display_user_sensor_data(sensor_data)
+
+    # Display GenAI advice as part of the page with anchor
+    st.markdown("<div id='motivational-quote'></div>", unsafe_allow_html=True)
     st.header("Today's Motivation")
-    motivate(userId) # Calls the existing motivate function 
+    motivate(userId)
     
 def display_app_page(): 
     # Create the sidebar
