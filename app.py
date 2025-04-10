@@ -30,9 +30,42 @@ def nav_to_home():
 userId = 'user1'
 workoutId = 'workout1'  # Fixed variable name
 
-def display_app_page():
-    """Displays the home page of the app."""
-    
+def display_app_page(): #not called in main
+    # Create the sidebar
+    with st.sidebar:
+        st.title("Main Menu")
+        
+        # User profile section in sidebar
+        user_info = get_user_profile(userId)
+        st.subheader(f"Welcome, {user_info['Name']}!")
+        st.markdown("---")
+        
+        # Navigation options
+        st.subheader("Sections")
+        st.markdown("• [Activity Summary](#activity-summary)")
+        st.markdown("• [Recent Workouts](#recent-workouts)")
+        st.markdown("• [User Posts](#user-posts)")
+        st.markdown("• [Motivational Quote](#motivational-quote)")
+        
+        # Add the activity page link
+        st.markdown("---")
+        st.markdown("[Go to Activity Page](activity_page)")
+        
+        # Maybe add quick stats in sidebar
+        st.markdown("---")
+        st.subheader("Quick Stats")
+        user_workouts = get_user_workouts(userId)
+        st.metric("Total Workouts", len(user_workouts))
+        st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
+        
+        #Team Members 
+        st.markdown("---")
+        st.subheader("Spaghetti Crew Team")
+        st.markdown("Juan")
+        st.markdown("Jona")
+        st.markdown("Foluso")
+        st.markdown("Loie")
+
     # Add custom CSS focusing on making the activity summary taller
     st.markdown(
         """
