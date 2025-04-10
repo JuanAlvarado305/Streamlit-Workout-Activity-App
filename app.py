@@ -10,7 +10,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts
 from activity_page import activity_page_content  # Import function instead of module
 
 # Create a session state variable to track the current page
@@ -30,14 +30,91 @@ def nav_to_home():
 userId = 'user1'
 workoutId = 'workout1'  # Fixed variable name
 
-def display_app_page(): #not called in main
+def display_home_page():
+    """Displays the Community Feed page containing friends' posts and GenAI advice."""
+
+    # --- Sidebar Setup ---
+    with st.sidebar:
+        # User profile section
+        user_info = get_user_profile(userId)
+        # Use the fetched name, provide fallback if not found
+        user_name = user_info.get('Name', 'User') if user_info else 'User'
+        st.subheader(f"Welcome, {user_info['full_name']}!")
+        st.markdown("---")
+
+        # Quick Stats Section
+        st.subheader("Quick Stats")
+        try:
+            user_workouts = get_user_workouts(userId)
+            # Check if user_workouts is not None and is iterable
+            if user_workouts:
+                 st.metric("Total Workouts", len(user_workouts))
+                 # Filter for workouts in the current week correctly
+                 st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
+            else:
+                 st.metric("Total Workouts", 0)
+                 st.metric("This Week", 0)
+                 st.write("No workout data available.")
+        except Exception as e:
+            st.error(f"Could not load workout stats: {e}")
+            st.metric("Total Workouts", "N/A")
+            st.metric("This Week", "N/A")
+
+        st.markdown("---")
+
+        # Team Members Section
+        st.subheader("Spaghetti Crew Team")
+        st.markdown("Juan")
+        st.markdown("Jona")
+        st.markdown("Foluso")
+        st.markdown("Loie")
+        st.markdown("---")
+
+    # --- Main Page Content ---
+    st.title('Welcome to the Spaghetti Crew Workout App!')
+
+    # Display first 10 posts from the user's friends ordered by timestamp
+    st.header("What your friends are up to...")
+    try:
+        friends_posts = get_friends_posts(userId) #list of a user's posts
+
+        if not friends_posts:
+            st.info("No posts from your friends to show right now. Connect with more friends or encourage them to post!")
+        else:
+            # Display up to 10 posts
+            for post in friends_posts[:10]:
+                 display_post(post)
+                 st.markdown("---")  # Adds a separator between posts
+
+            if len(friends_posts) > 10:
+                st.markdown("Showing the 10 most recent posts.")
+            else:
+                st.markdown('You have viewed all recent community posts.')
+
+    #keyError
+    except Exception as e:
+        pass
+    #     st.error(f"Could not load community posts: {e}")
+    #     # Display placeholder posts as a fallback during development/error
+    #     st.subheader("Sample Posts:")
+    #     for num in range(3): # Display a few placeholders on error
+    #         display_post({'post_id': f'error_post{num}', 'author_id': 'user_error', 'username': 'error', 'timestamp': datetime.datetime.now(), 'image_url': 'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8', 'content': 'Error loading post. This is placeholder content.'})
+    #         st.markdown('---')
+
+    st.markdown("---") # Separator before GenAI advice
+
+    # Display one piece of GenAI advice and encouragement
+    st.header("Today's Motivation")
+    motivate(userId) # Calls the existing motivate function 
+    
+def display_app_page(): 
     # Create the sidebar
     with st.sidebar:
         st.title("Main Menu")
         
         # User profile section in sidebar
         user_info = get_user_profile(userId)
-        st.subheader(f"Welcome, {user_info['Name']}!")
+        st.subheader(f"Welcome, {user_info['full_name']}!")
         st.markdown("---")
         
         # Navigation options
@@ -198,7 +275,8 @@ def motivate(userId):
 if __name__ == '__main__':
     # Check the current page and display appropriate content
     if st.session_state.page == 'home':
-        display_app_page()
+        display_home_page()
+        #display_app_page()
     elif st.session_state.page == 'activity':
         # Add a "Back to Home" button at the top of the page
         if st.button("Return to Home"):

@@ -197,9 +197,6 @@ def get_user_posts(user_id):
     query = """
         SELECT *, AuthorId as user_id_alias
         FROM `roberttechx25.ISE.Posts`
-    query = """
-        SELECT *, AuthorId as user_id_alias
-        FROM `roberttechx25.ISE.Posts`
         WHERE AuthorId = @user_id
         ORDER BY timestamp DESC
     """
@@ -219,6 +216,49 @@ def get_user_posts(user_id):
         if 'image' not in post:
             post['image'] = None
     return posts
+
+def get_friends_posts(user_id): #written with help from Gemini
+    """Returns a list of posts from the user's friends, ordered by timestamp descending."""
+    client = bigquery.Client(project='roberttechx25')
+
+    # Query to get friends' posts
+    query = """
+        SELECT
+            p.PostId AS PostId,
+            p.AuthorId AS AuthorId,
+            p.Timestamp AS Timestamp,
+            p.ImageUrl AS ImageUrl,
+            p.Content AS Content,
+            u.Name AS Username,
+        FROM `roberttechx25.ISE.Posts` AS p
+        JOIN `roberttechx25.ISE.Friends` AS f ON p.AuthorId = f.UserId2
+        JOIN `roberttechx25.ISE.Users` AS u ON p.AuthorId = u.UserId -- Join with Users to get name
+        WHERE f.UserId1 = @user_id -- Find posts where the author is a friend (UserId2) of the current user (UserId1)
+        ORDER BY p.Timestamp DESC
+    """
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    )
+
+    try:
+        query_job = client.query(query, job_config=query_config)
+        results = query_job.result()
+        # Convert rows to dictionaries matching expected keys in display_post, adding author_name
+        return [
+            {
+                'post_id': row.PostId,
+                'AuthorId': row.AuthorId,
+                'Username': row.Username,
+                'Timestamp': row.Timestamp,
+                'ImageUrl': row.ImageUrl,
+                'Content': row.Content
+             } for row in results]
+    except Exception as e:
+        print(f"Error fetching friends' posts for user {user_id}: {e}")
+        return [] # Return empty list on error
 
 
 def get_friends_posts(user_id): #written with help from Gemini
