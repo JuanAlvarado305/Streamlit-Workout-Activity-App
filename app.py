@@ -133,9 +133,6 @@ def display_app_page():
         display_post(post)
         st.markdown("---")  # Adds a separator between posts
         
-    # Display a custom component example.
-    value = st.text_input('Enter your name')
-    display_my_custom_component(value)
 
     # Fetch sensor data for the given workout and display it.
     sensor_data = get_user_sensor_data(userId, workoutId)

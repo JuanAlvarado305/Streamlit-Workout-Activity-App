@@ -146,28 +146,28 @@ def display_activity_summary(workouts_list):
     """
     # Calculate summary statistics
     workout_count = len(workouts_list)
-    total_distance = sum(workout.get('distance', 0) for workout in workouts_list)
-    total_steps = sum(workout.get('steps', 0) for workout in workouts_list)
-    total_calories = sum(workout.get('calories_burned', 0) for workout in workouts_list)
-    
-    # Format the activity rows HTML
-    activity_rows = ""
+    total_distance = sum(workout.get('TotalDistance', 0) for workout in workouts_list)
+    total_steps = sum(workout.get('TotalSteps', 0) for workout in workouts_list)
+    total_calories = sum(workout.get('CaloriesBurned', 0) for workout in workouts_list)
+
+
     # Sort workouts by start timestamp (most recent first)
+    activity_rows = ""
     sorted_workouts = sorted(workouts_list, 
-                             key=lambda x: x.get('start_timestamp', ''), 
+                             key=lambda x: x.get('StartTimestamp', ''), 
                              reverse=True)
     
     for workout in sorted_workouts:
-        # Extract the date part of the timestamp (assuming format "YYYY-MM-DD HH:MM:SS")
-        date = workout.get('start_timestamp', '').split(' ')[0] if workout.get('start_timestamp') else 'N/A'
+        timestamp = workout.get('StartTimestamp')
+        date = timestamp.strftime('%d %b %Y, %I:%M %p') if timestamp else 'N/A'
         
         # Create a row for each workout
         row_html = f'''
         <div class="activity-row">
             <span>{date}</span>
-            <span>{workout.get('distance', 0)} km</span>
-            <span>{workout.get('steps', 0)}</span>
-            <span>{workout.get('calories_burned', 0)}</span>
+            <span>{workout.get('TotalDistance', 0)} km</span>
+            <span>{workout.get('TotalSteps', 0)}</span>
+            <span>{workout.get('CaloriesBurned', 0)}</span>
         </div>
         '''
         activity_rows += row_html
@@ -207,7 +207,7 @@ def display_genai_advice(timestamp, content, image):
     safe_timestamp_str = str(timestamp) if timestamp is not None else ""
     try:
         dt_object = datetime.strptime(safe_timestamp_str, "%Y-%m-%d %H:%M:%S")
-        safe_timestamp_str = dt_object.strftime("%d %b %Y, %H:%M")
+        safe_timestamp_str = dt_object.strftime("%d %b %Y, %I:%M %p")
     except ValueError:
         pass
 
@@ -310,7 +310,7 @@ def display_recent_workouts(workouts_list):
     
     # Sort workouts by start timestamp (most recent first)
     sorted_workouts = sorted(workouts_list, 
-                         key=lambda x: x.get('start_timestamp', ''), 
+                         key=lambda x: x.get('StartTimestamp', ''), 
                          reverse=True)
     
     # Display header
@@ -357,8 +357,8 @@ def display_recent_workouts(workouts_list):
     for workout in sorted_workouts[:5]:  # Limit to 5 most recent workouts
         try:
             # Parse timestamps to calculate duration
-            start_time = datetime.strptime(workout.get('start_timestamp', ''), '%Y-%m-%d %H:%M:%S')
-            end_time = datetime.strptime(workout.get('end_timestamp', ''), '%Y-%m-%d %H:%M:%S')
+            start_time = workout.get('StartTimestamp')
+            end_time = workout.get('EndTimestamp')
             duration = end_time - start_time
             minutes, seconds = divmod(duration.seconds, 60)
             hours, minutes = divmod(minutes, 60)
@@ -386,15 +386,15 @@ def display_recent_workouts(workouts_list):
                         </div>
                         <div class="workout-stat">
                             <span class="stat-label">Distance</span>
-                            <span class="stat-value">{workout.get('distance', 0):.1f} km</span>
+                            <span class="stat-value">{workout.get('TotalDistance', 0):.1f} km</span>
                         </div>
                         <div class="workout-stat">
                             <span class="stat-label">Steps</span>
-                            <span class="stat-value">{workout.get('steps', 0):,}</span>
+                            <span class="stat-value">{workout.get('TotalSteps', 0):,}</span>
                         </div>
                         <div class="workout-stat">
                             <span class="stat-label">Calories Burned</span>
-                            <span class="stat-value">{workout.get('calories_burned', 0)}</span>
+                            <span class="stat-value">{workout.get('CaloriesBurned', 0)}</span>
                         </div>
                     </div>
                 </div>

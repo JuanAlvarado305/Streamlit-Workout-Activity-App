@@ -124,7 +124,7 @@ def get_user_workouts(user_id):
             SELECT *
             FROM `roberttechx25.ISE.Workouts`
             WHERE UserId = @user_id
-            ORDER BY start_timestamp DESC
+            ORDER BY StartTimestamp DESC
         """
         
         # Configure query parameters
