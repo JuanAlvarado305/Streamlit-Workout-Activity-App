@@ -76,7 +76,8 @@ def display_home_page():
                 st.markdown('You have viewed all recent community posts.')
 
     #keyError
-    # except Exception as e:
+    except Exception as e:
+        pass
     #     st.error(f"Could not load community posts: {e}")
     #     # Display placeholder posts as a fallback during development/error
     #     st.subheader("Sample Posts:")
