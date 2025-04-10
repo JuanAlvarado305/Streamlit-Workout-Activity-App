@@ -261,44 +261,6 @@ def get_friends_posts(user_id): #written with help from Gemini
         return [] # Return empty list on error
 
 
-def get_friends_posts(user_id): #written with help from Gemini
-    """Returns a list of posts from the user's friends, ordered by timestamp descending."""
-    client = bigquery.Client(project='roberttechx25')
-
-    # Query to get friends' posts
-    query = """
-        SELECT
-            p.PostId AS PostId,
-            p.AuthorId AS AuthorId,
-            p.Timestamp AS Timestamp,
-            p.ImageUrl AS ImageUrl,
-            p.Content AS Content,
-            u.Name AS Username,
-        FROM `roberttechx25.ISE.Posts` AS p
-        JOIN `roberttechx25.ISE.Friends` AS f ON p.AuthorId = f.UserId2
-        JOIN `roberttechx25.ISE.Users` AS u ON p.AuthorId = u.UserId -- Join with Users to get name
-        WHERE f.UserId1 = @user_id -- Find posts where the author is a friend (UserId2) of the current user (UserId1)
-        ORDER BY p.Timestamp DESC
-    """
-
-    query_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)]
-    )
-    query_job = client.query(query, job_config=query_config)
-    results = query_job.result()
-    posts = [dict(row) for row in results]
-    for post in posts:
-        if 'user_id_alias' in post:
-            post['user_id'] = post.pop('user_id_alias')
-        if 'timestamp' not in post:
-            post['timestamp'] = "1970-01-01 00:00:00"
-        if 'content' not in post:
-            post['content'] = "No Content Available"
-        if 'image' not in post:
-            post['image'] = None
-    return posts
-
-
 ###############################
 # New helper function for GenAI advice
 ###############################
