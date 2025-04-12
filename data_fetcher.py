@@ -53,7 +53,6 @@ def get_user_sensor_data(user_id, workout_id):
       - data: The sensor reading value (from SensorData.SensorValue)
       - units: The measurement units (from SensorTypes.Units)
     """
-    from google.cloud import bigquery
     project_id = "roberttechx25"
     dataset = "ISE"
     client = bigquery.Client(project=project_id)

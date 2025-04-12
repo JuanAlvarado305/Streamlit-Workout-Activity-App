@@ -1,9 +1,10 @@
 import streamlit as st
 from data_fetcher import get_user_workouts, get_user_profile, get_user_posts
 from modules import insert_post, display_recent_workouts, display_activity_summary
+from app import userId
 
-userId = 'user1'
-st.set_page_config(page_title="Activity Summary", layout="wide")
+
+# st.set_page_config(page_title="Activity Summary", layout="wide")
 
 def activity_page():
     # Add custom CSS focusing on making the activity summary taller
@@ -68,7 +69,6 @@ def activity_page():
     # Fetch user data if not already fetched in sidebar
     if 'user_workouts' not in locals():
         user_workouts = get_user_workouts(userId)
-    user_posts = get_user_posts(userId)
 
     st.title("Activity Summary")
 
