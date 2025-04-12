@@ -216,11 +216,11 @@ def get_user_posts(user_id):
             post['image'] = None
     return posts
 
-def get_friends_posts(user_id): #written with help from Gemini
+def get_friends_posts(user_id):
     """Returns a list of posts from the user's friends, ordered by timestamp descending."""
     client = bigquery.Client(project='roberttechx25')
-
-    # Query to get friends' posts
+    
+    # Modified query to check for friendships in both directions
     query = """
         SELECT
             p.PostId AS PostId,
@@ -230,18 +230,22 @@ def get_friends_posts(user_id): #written with help from Gemini
             p.Content AS Content,
             u.Name AS Username,
         FROM `roberttechx25.ISE.Posts` AS p
-        JOIN `roberttechx25.ISE.Friends` AS f ON p.AuthorId = f.UserId2
-        JOIN `roberttechx25.ISE.Users` AS u ON p.AuthorId = u.UserId -- Join with Users to get name
-        WHERE f.UserId1 = @user_id -- Find posts where the author is a friend (UserId2) of the current user (UserId1)
+        JOIN `roberttechx25.ISE.Users` AS u ON p.AuthorId = u.UserId
+        JOIN (
+            -- Union of both friendship directions
+            SELECT UserId2 AS FriendId FROM `roberttechx25.ISE.Friends` WHERE UserId1 = @user_id
+            UNION DISTINCT
+            SELECT UserId1 AS FriendId FROM `roberttechx25.ISE.Friends` WHERE UserId2 = @user_id
+        ) AS friends ON p.AuthorId = friends.FriendId
         ORDER BY p.Timestamp DESC
     """
-
+    
     query_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
         ]
     )
-
+    
     try:
         query_job = client.query(query, job_config=query_config)
         results = query_job.result()
@@ -253,8 +257,8 @@ def get_friends_posts(user_id): #written with help from Gemini
                 'Username': row.Username,
                 'Timestamp': row.Timestamp,
                 'ImageUrl': row.ImageUrl,
-                'Content': row.Content
-             } for row in results]
+                'Content': row.Content 
+            } for row in results]
     except Exception as e:
         print(f"Error fetching friends' posts for user {user_id}: {e}")
         return [] # Return empty list on error
