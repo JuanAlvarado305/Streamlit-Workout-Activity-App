@@ -12,12 +12,14 @@ from data_fetcher import get_user_profile
 from html import escape
 from internals import create_component
 from datetime import datetime
-
+import random
+from google.cloud import bigquery
+import uuid
 
 def display_my_custom_component(value):
     """Displays a 'my custom component' which showcases an example of how custom
     components work.
-
+    
     value: the name you'd like to be called by within the app
     """
     data = {
@@ -26,12 +28,11 @@ def display_my_custom_component(value):
     html_file_name = "my_custom_component"
     create_component(data, html_file_name)
 
-
 def display_post(post, get_user_data=get_user_profile):
-    """Displays a user post with an improved layout in Streamlit."""
-    """This function was created with the help of ChatGPT and Gemini"""
-    
-    #Get User Data
+    """Displays a user post with an improved layout in Streamlit.
+    This function was created with the help of ChatGPT and Gemini.
+    """
+    # Get User Data
     userData = get_user_data(post['AuthorId'])
     username = userData['username']
     user_image = userData['profile_image']
@@ -39,11 +40,10 @@ def display_post(post, get_user_data=get_user_profile):
     content = post['Content']
     post_image = post['ImageUrl']
 
-    # Formated Timestamp
-    
-    formatted_time = timestamp.strftime("%d %b %Y, %I:%M %p")  # 08 Mar 2024, 02:30 PM
- 
-    # CSS
+    # Format Timestamp
+    formatted_time = timestamp.strftime("%d %b %Y, %I:%M %p")  # e.g., 08 Mar 2024, 02:30 PM
+
+    # CSS styles for the post
     st.markdown(
         """
         <style>
@@ -82,8 +82,7 @@ def display_post(post, get_user_data=get_user_profile):
             }
             .post-info strong {
                 font-size: 16px;
-                margin-bottom: 0px;
-                padding-bottom: 0px;
+                margin-bottom: 0;
                 line-height: 1;
             }
             .post-info span {
@@ -95,15 +94,12 @@ def display_post(post, get_user_data=get_user_profile):
         """,
         unsafe_allow_html=True
     )
- 
-    # main container
+
     with st.container():
-        # Header with name and profile picture
+        # Header: profile picture and user info
         col1, col2 = st.columns([1, 11])
- 
         with col1:
             st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
- 
         with col2:
             st.markdown(
                 f"""
@@ -114,14 +110,10 @@ def display_post(post, get_user_data=get_user_profile):
                 """,
                 unsafe_allow_html=True
             )
- 
-        # Post Content
+        # Post Content and optional image
         st.markdown(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
- 
-        # Post Image (if exists)
         if post_image:
             st.image(post_image, use_container_width=True)
-
 
 def display_activity_summary(workouts_list):
     """Displays a summary of user workout activities.
@@ -131,37 +123,22 @@ def display_activity_summary(workouts_list):
     a list of recent workouts with their details.
     
     Args:
-        workouts_list: A list of dictionaries, where each dictionary contains
-            workout information with the following keys:
-            - 'start_timestamp': The start time of the workout.
-            - 'end_timestamp': The end time of the workout.
-            - 'distance': The distance covered in km.
-            - 'steps': The number of steps taken.
-            - 'calories_burned': The number of calories burned.
-            - 'start_lat_lng': The starting coordinates (latitude, longitude).
-            - 'end_lat_lng': The ending coordinates (latitude, longitude).
+        workouts_list: A list of dictionaries, each containing workout details.
     
     Returns:
         None. Renders the activity summary component in the Streamlit app.
     """
-    # Calculate summary statistics
     workout_count = len(workouts_list)
     total_distance = sum(workout.get('TotalDistance', 0) for workout in workouts_list)
     total_steps = sum(workout.get('TotalSteps', 0) for workout in workouts_list)
     total_calories = sum(workout.get('CaloriesBurned', 0) for workout in workouts_list)
 
-
-    # Sort workouts by start timestamp (most recent first)
+    # Create HTML rows for each workout (sorted most recent first)
     activity_rows = ""
-    sorted_workouts = sorted(workouts_list, 
-                             key=lambda x: x.get('StartTimestamp', ''), 
-                             reverse=True)
-    
+    sorted_workouts = sorted(workouts_list, key=lambda x: x.get('StartTimestamp', ''), reverse=True)
     for workout in sorted_workouts:
         timestamp = workout.get('StartTimestamp')
         date = timestamp.strftime('%d %b %Y, %I:%M %p') if timestamp else 'N/A'
-        
-        # Create a row for each workout
         row_html = f'''
         <div class="activity-row">
             <span>{date}</span>
@@ -171,8 +148,7 @@ def display_activity_summary(workouts_list):
         </div>
         '''
         activity_rows += row_html
-    
-    # Prepare data for the component
+
     data = {
         'WORKOUT_COUNT': workout_count,
         'TOTAL_DISTANCE': round(total_distance, 1),
@@ -180,41 +156,27 @@ def display_activity_summary(workouts_list):
         'TOTAL_CALORIES': total_calories,
         'ACTIVITY_ROWS': activity_rows
     }
-    
-    # Register and display the component with explicit height
     html_file_name = "my_custom_component"
-    
-    # The explicit height ensures the component isn't cut off
-    # Adjust the height value based on how many workouts you're displaying
-    # Add about 100px + (40px × number of workout rows)
-    height = 350 + min(len(workouts_list) * 40, 400)  # Base height + row height with a reasonable max
-    
+    height = 350 + min(len(workouts_list) * 40, 400)  # Adjust height according to workout count
     create_component(data, html_file_name, height=height)
-
 
 def display_genai_advice(timestamp, content, image):
     """
     Creates and displays a motivational advice component using the provided data.
-    This function constructs an HTML snippet with embedded CSS and renders it
-    using Streamlit. It uses the given timestamp, content, and image URL.
     
     Parameters:
         timestamp (str or datetime): The time when the advice was generated.
-        content (str): The motivational advice text to be displayed.
+        content (str): The motivational advice text.
         image (str): The URL or file path of the image associated with the advice.
     """
-    # Format the timestamp if it is a string in the format "YYYY-MM-DD HH:MM:SS"
     safe_timestamp_str = str(timestamp) if timestamp is not None else ""
     try:
         dt_object = datetime.strptime(safe_timestamp_str, "%Y-%m-%d %H:%M:%S")
         safe_timestamp_str = dt_object.strftime("%d %b %Y, %I:%M %p")
     except ValueError:
         pass
-
-    # Escape content and the formatted timestamp to prevent HTML injection
     safe_content = escape(str(content))
     safe_timestamp = escape(safe_timestamp_str)
-
     html_code = f"""
     <style>
         .custom-component-container {{
@@ -231,7 +193,6 @@ def display_genai_advice(timestamp, content, image):
             align-items: center;
             background: linear-gradient(to bottom right, #6dd5fa, #2980b9);
         }}
-
         .image {{
             position: absolute;
             width: 100%;
@@ -239,7 +200,6 @@ def display_genai_advice(timestamp, content, image):
             object-fit: cover;
             filter: brightness(50%);
         }}
-
         .content {{
             position: absolute;
             top: 50%;
@@ -253,7 +213,6 @@ def display_genai_advice(timestamp, content, image):
             margin: 0 20px;
             line-height: 1.2;
         }}
-
         .time {{
             position: absolute;
             bottom: 13px;
@@ -264,7 +223,6 @@ def display_genai_advice(timestamp, content, image):
             z-index: 2;
         }}
     </style>
-
     <div class="custom-component-container">
         <img class="image" src="{image}" alt="">
         <p class="content">{safe_content}</p>
@@ -273,12 +231,100 @@ def display_genai_advice(timestamp, content, image):
     """
     st.markdown(html_code, unsafe_allow_html=True)
 
+def create_workout_content(workout):
+    """Creates dynamic content based on workout data."""
+    if not workout:
+        return "Just completed a workout! Feeling great!"
+    try:
+        # Format the workout end time for readability
+        end_time = datetime.strptime(workout['end_timestamp'], '%Y-%m-%d %H:%M:%S')
+        workout_date = end_time.strftime('%A, %B %d')
+        workout_time = end_time.strftime('%I:%M %p')
+        steps = workout.get('steps', 0)
+        distance = workout.get('distance', 0)
+        calories = workout.get('calories_burned', 0)
+        templates = [
+            f"Just finished an awesome workout! Walked {steps} steps, covered {distance} km, and burned {calories} calories! 💪 #FitnessJourney",
+            f"Workout complete on {workout_date}! {steps} steps, {distance} km distance, and {calories} calories burned. Feeling accomplished! 🏃",
+            f"Today's fitness achievement: {steps} steps, {distance} km, and {calories} calories burned! Making progress one step at a time. 🔥",
+            f"Just wrapped up my workout at {workout_time}! Stats: {steps} steps, {distance} km, {calories} calories. #StayActive",
+            f"Another workout in the books! Logged {steps} steps and burned {calories} calories over {distance} km. #FitnessGoals"
+        ]
+        return random.choice(templates)
+    except (KeyError, ValueError) as e:
+        print(f"Error formatting workout content: {e}")
+        return "Just completed a workout! Feeling great!"
 
-def insert_post(user_id, content):
-    """Inserts a new post into the database."""
-    # Replace this with actual database insertion logic
-    print(f"Inserting post for user {user_id} with content: {content}")
-    st.write("Post inserted (placeholder)")
+def display_post_preview(content, image_url=None):
+    """Displays a preview of how the post will look."""
+    st.subheader("Post Preview:")
+    preview_container = st.container()
+    with preview_container:
+        st.markdown("---")
+        col1, col2 = st.columns([1, 5])
+        with col1:
+            st.image("https://placekitten.com/100/100", width=60)
+        with col2:
+            st.markdown("**You**")
+            st.markdown("*Just now*")
+            st.markdown(content)
+        if image_url:
+            st.image(image_url, width=300)
+        st.markdown("---")
+
+def check_duplicate_post(user_id, content):
+    """Checks if a very similar post was recently made by this user."""
+    client = bigquery.Client(project='roberttechx25')
+    query = """
+        SELECT COUNT(*) as count
+        FROM `roberttechx25.ISE.Posts` 
+        WHERE AuthorId = @user_id
+        AND Content LIKE @content_pattern
+        AND Timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR)
+    """
+    content_words = content.split()
+    if content_words:
+        content_pattern = f"%{' '.join(content_words[:min(5, len(content_words))])}%"
+        query_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter('user_id', 'STRING', user_id),
+                bigquery.ScalarQueryParameter('content_pattern', 'STRING', content_pattern)
+            ]
+        )
+        try:
+            query_job = client.query(query, job_config=query_config)
+            results = list(query_job.result())
+            return results[0].count > 0
+        except Exception as e:
+            print(f"Error checking for duplicate posts: {e}")
+    return False
+
+def insert_post(user_id, content, image_url=None):
+    """Inserts a new post into the database.
+    Returns (success, message) tuple.
+    """
+    client = bigquery.Client(project='roberttechx25')
+    post_id = f"post_{uuid.uuid4().hex[:8]}"
+    query = """
+        INSERT INTO `roberttechx25.ISE.Posts` (PostId, AuthorId, Timestamp, ImageUrl, Content)
+        VALUES (@post_id, @author_id, CURRENT_TIMESTAMP(), @image_url, @content)
+    """
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('post_id', 'STRING', post_id),
+            bigquery.ScalarQueryParameter('author_id', 'STRING', user_id),
+            bigquery.ScalarQueryParameter('image_url', 'STRING', image_url),
+            bigquery.ScalarQueryParameter('content', 'STRING', content)
+        ]
+    )
+    try:
+        query_job = client.query(query, job_config=query_config)
+        query_job.result()  # Wait for query to complete
+        return True, "Post shared successfully!"
+    except Exception as e:
+        error_msg = f"Error inserting post: {e}"
+        print(error_msg)
+        return False, error_msg
 
 def display_recent_workouts(workouts_list):
     """Displays a list of recent workouts with detailed information.
@@ -289,34 +335,16 @@ def display_recent_workouts(workouts_list):
     with the most recent first.
     
     Args:
-        workouts_list: A list of dictionaries, where each dictionary contains
-            workout information with the following keys:
-            - 'start_timestamp': The start time of the workout.
-            - 'end_timestamp': The end time of the workout.
-            - 'distance': The distance covered in km.
-            - 'steps': The number of steps taken.
-            - 'calories_burned': The number of calories burned.
-            - 'start_lat_lng': The starting coordinates (latitude, longitude).
-            - 'end_lat_lng': The ending coordinates (latitude, longitude).
+        workouts_list: A list of dictionaries containing workout details.
     
     Returns:
         None. Renders the recent workouts component in the Streamlit app.
     """
-    
-    # If no workouts, display message
     if not workouts_list:
         st.write("No recent workouts found.")
         return
-    
-    # Sort workouts by start timestamp (most recent first)
-    sorted_workouts = sorted(workouts_list, 
-                         key=lambda x: x.get('StartTimestamp', ''), 
-                         reverse=True)
-    
-    # Display header
+    sorted_workouts = sorted(workouts_list, key=lambda x: x.get('StartTimestamp', ''), reverse=True)
     st.subheader("Recent Workouts")
-    
-    # Define CSS for better styling
     st.markdown("""
         <style>
             .workout-card {
@@ -352,30 +380,21 @@ def display_recent_workouts(workouts_list):
             }
         </style>
     """, unsafe_allow_html=True)
-    
-    # Display each workout
-    for workout in sorted_workouts[:5]:  # Limit to 5 most recent workouts
+    for workout in sorted_workouts[:5]:
         try:
-            # Parse timestamps to calculate duration
             start_time = workout.get('StartTimestamp')
             end_time = workout.get('EndTimestamp')
             duration = end_time - start_time
             minutes, seconds = divmod(duration.seconds, 60)
             hours, minutes = divmod(minutes, 60)
-            
-            # Format duration string
             duration_str = ""
             if hours > 0:
                 duration_str += f"{hours}h "
             if minutes > 0 or hours > 0:
                 duration_str += f"{minutes}m "
             duration_str += f"{seconds}s"
-            
-            # Format date
-            formatted_date = start_time.strftime("%B %d, %Y")  # e.g., January 01, 2024
-            formatted_time = start_time.strftime("%I:%M %p")   # e.g., 12:00 AM
-            
-            # Create workout card
+            formatted_date = start_time.strftime("%B %d, %Y")
+            formatted_time = start_time.strftime("%I:%M %p")
             st.markdown(f"""
                 <div class="workout-card">
                     <div class="workout-date">{formatted_date} at {formatted_time}</div>
@@ -400,35 +419,25 @@ def display_recent_workouts(workouts_list):
                 </div>
             """, unsafe_allow_html=True)
         except (ValueError, KeyError, Exception) as e:
-            # Handle potential errors gracefully
             st.error(f"Error displaying workout: {e}")
 
 def display_user_sensor_data(sensor_data_list):
     """
-    Takes in the list of sensor data and displays it to the user using Streamlit components
-    with visualizations and interactive elements.
+    Takes in the list of sensor data and displays it to the user using Streamlit
+    components with visualizations and interactive elements.
     """
-    import streamlit as st
     import pandas as pd
     import plotly.express as px
     import plotly.graph_objects as go
-    from datetime import datetime
-
     if not sensor_data_list:
         st.warning("No sensor data available for this workout.")
         return
 
-    # Convert the sensor data list to a DataFrame for easier manipulation.
     df = pd.DataFrame(sensor_data_list)
-
-    # Convert the 'timestamp' column to datetime (if not already)
     if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
         df['timestamp'] = pd.to_datetime(df['timestamp'])
-
-    # Extract unique sensor types.
     sensor_types = df['sensor_type'].unique()
 
-    # CSS styling that adapts to light and dark mode.
     st.markdown(
         """
         <style>
@@ -459,7 +468,6 @@ def display_user_sensor_data(sensor_data_list):
                 font-size: 16px;
                 color: #0e1117;
             }
-            /* Dark mode styles */
             @media (prefers-color-scheme: dark) {
                 .header {
                     color: #ffffff;
@@ -479,10 +487,8 @@ def display_user_sensor_data(sensor_data_list):
         """, unsafe_allow_html=True
     )
 
-    # Add header using st.header (for testing and clarity)
     st.header("Workout Sensor Data")
     st.markdown("<div class='subheader'>Summary</div>", unsafe_allow_html=True)
-
     workout_duration = (df['timestamp'].max() - df['timestamp'].min()).total_seconds() / 60
     summary_html = f"""
         <div class='summary-box'>
@@ -492,11 +498,8 @@ def display_user_sensor_data(sensor_data_list):
         </div>
     """
     st.markdown(summary_html, unsafe_allow_html=True)
-
-    # Create tabs for different views.
     tab1, tab2, tab3 = st.tabs(["Charts", "Raw Data", "Insights"])
 
-    # Tab 1: Charts
     with tab1:
         st.markdown("<div class='subheader'>Sensor Data Visualization</div>", unsafe_allow_html=True)
         selected_sensors = st.multiselect(
@@ -510,7 +513,6 @@ def display_user_sensor_data(sensor_data_list):
                 sensor_df = filtered_df[filtered_df['sensor_type'] == sensor].sort_values("timestamp")
                 units = sensor_df['units'].iloc[0] if not sensor_df.empty else ""
                 st.markdown(f"<div class='subheader'>{sensor} ({units})</div>", unsafe_allow_html=True)
-                # Prepare data for st.line_chart by setting timestamp as the index.
                 sensor_chart_df = sensor_df.set_index("timestamp")[["data"]]
                 st.line_chart(sensor_chart_df)
                 col1, col2, col3, col4 = st.columns(4)
@@ -519,20 +521,12 @@ def display_user_sensor_data(sensor_data_list):
                 col3.metric("Minimum", f"{sensor_df['data'].min():.2f} {units}")
                 col4.metric("Readings", f"{len(sensor_df)}")
 
-    # Tab 2: Raw Data
     with tab2:
         st.markdown("<div class='subheader'>Raw Sensor Data</div>", unsafe_allow_html=True)
         st.dataframe(df.sort_values('timestamp'))
         csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            "Download CSV",
-            csv,
-            "sensor_data.csv",
-            "text/csv",
-            key='download-csv'
-        )
+        st.download_button("Download CSV", csv, "sensor_data.csv", "text/csv", key='download-csv')
 
-    # Tab 3: Insights
     with tab3:
         st.markdown("<div class='subheader'>Insights and Patterns</div>", unsafe_allow_html=True)
         if len(sensor_types) > 1:
@@ -576,7 +570,6 @@ def display_user_sensor_data(sensor_data_list):
                     st.warning("Not enough data points to analyze correlation between these sensors.")
             else:
                 st.warning("Please select different sensors for comparison.")
-
         st.markdown("<div class='subheader'>Time-Based Analysis</div>", unsafe_allow_html=True)
         if len(df) > 10:
             selected_sensor = st.selectbox("Select sensor for time analysis:", sensor_types)
@@ -616,4 +609,3 @@ def display_user_sensor_data(sensor_data_list):
                 st.info(f"The {selected_sensor} values showed an increasing trend of approximately {change_pct:.1f}% from start to finish.")
             else:
                 st.info(f"The {selected_sensor} values showed a decreasing trend of approximately {abs(change_pct):.1f}% from start to finish.")
-                

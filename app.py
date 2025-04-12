@@ -27,8 +27,8 @@ def nav_to_home():
     st.session_state.page = 'home'
     st.rerun()  # Use st.rerun() instead of experimental_rerun
 
-userId = 'user1'
-workoutId = 'workout1'  # Fixed variable name
+userId = 'user2'
+workoutId = 'workout2'  # Fixed variable name
 
 def display_home_page():
     """Displays the Community Feed page containing friends' posts and GenAI advice."""

@@ -1,6 +1,6 @@
 import streamlit as st
 from data_fetcher import get_user_workouts, get_user_profile, get_user_posts
-from modules import insert_post, display_recent_workouts, display_activity_summary
+from modules import  display_recent_workouts, display_activity_summary, create_workout_content, display_post_preview, check_duplicate_post, insert_post
 from app import userId
 
 
@@ -84,8 +84,8 @@ def activity_page():
     
     # --- Recent Workouts ---
     st.header("Recent Workouts")
-    user_id = "user1"  # Replace with actual user ID
-    workouts = get_user_workouts(user_id)
+    # userId = "user1"  # Replace with actual user ID
+    workouts = get_user_workouts(userId)
     if workouts:
         display_recent_workouts(workouts)
     else:
@@ -93,28 +93,52 @@ def activity_page():
 
     st.write("###")  # This adds extra vertical space
     
-    # --- Share Button ---
+   # --- Share Your Activity Section ---
     st.header("Share Your Activity")
-    statistic_to_share = st.selectbox("Select a statistic to share", ["Steps", "Distance", "Calories Burned"])
+    st.write("Preview your activity to share:")
 
-    if st.button("Share with Community"):
-        # Here, you would fetch the actual statistic value and create the post.
-        if statistic_to_share == "Steps":
-            # steps = get_user_steps(user_id) # Replace user_id and get_user_steps
-            steps = workouts[0]['steps'] if workouts else 0 # Get steps from the first workout
-            post_content = f"Look at this, I walked {steps} steps today!"
-            insert_post(user_id, post_content)
-            st.success("Shared successfully!")
-        elif statistic_to_share == "Distance":
-            distance = workouts[0]['distance'] if workouts else 0
-            post_content = f"I covered {distance} km today!"
-            insert_post(user_id, post_content)
-            st.success("Shared successfully!")
-        elif statistic_to_share == "Calories Burned":
-            calories = workouts[0]['calories_burned'] if workouts else 0
-            post_content = f"I burned {calories} calories today!"
-            insert_post(user_id, post_content)
-            st.success("Shared successfully!")
+    # Get workout content from external function if workouts exist
+    if workouts:  # Assuming workouts is defined earlier
+        default_content = create_workout_content(workouts[0])  # External function
+    else:
+        default_content = "Just completed a workout! Feeling great!"
+
+    # Allow user to edit content
+    content = st.text_area("Post Preview", default_content, height=100)
+
+    # Image URL selection
+    use_custom_image = st.checkbox("Use custom image URL")
+
+    default_image_url = "https://cdn.pixabay.com/photo/2021/09/12/17/43/jogging-6619078_1280.jpg"
+
+    if use_custom_image:
+        image_url = st.text_input("Enter image URL", default_image_url)
+    else:
+        image_url = default_image_url
+
+    # Show image preview
+    if image_url:
+        st.image(image_url, caption="Image Preview", width=300)
+
+    # Show post preview using external function
+    display_post_preview(content, image_url)  # External function
+
+    # Confirm and post button
+    if st.button("Confirm and Post"):
+        if content.strip():  # Make sure content is not empty
+            # Check for duplicates using external function
+            is_duplicate = check_duplicate_post(userId, content)
+            if is_duplicate:
+                st.warning("You've already shared similar content recently.")
+                
+            success, message = insert_post(userId, content, image_url)
+            
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
+        else:
+            st.error("Post content cannot be empty.")
 
 if __name__ == "__main__":
     activity_page()
