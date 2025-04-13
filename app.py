@@ -104,8 +104,6 @@ def display_home_page():
     st.markdown("---") # Separator before GenAI advice
 
     # Fetch sensor data for the given workout and display it.
-    sensor_data = get_user_sensor_data(userId, workoutId)
-    display_user_sensor_data(sensor_data)
 
     # Display GenAI advice as part of the page with anchor
     st.markdown("<div id='motivational-quote'></div>", unsafe_allow_html=True)

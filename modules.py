@@ -97,7 +97,7 @@ def display_post(post, get_user_data=get_user_profile):
 
     with st.container():
         # Header: profile picture and user info
-        col1, col2 = st.columns([1, 11])
+        col1, col2 = st.columns([1, 20])
         with col1:
             st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
         with col2:
@@ -344,7 +344,6 @@ def display_recent_workouts(workouts_list):
         st.write("No recent workouts found.")
         return
     sorted_workouts = sorted(workouts_list, key=lambda x: x.get('StartTimestamp', ''), reverse=True)
-    st.subheader("Recent Workouts")
     st.markdown("""
         <style>
             .workout-card {
