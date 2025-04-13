@@ -132,7 +132,7 @@ def activity_page():
             is_duplicate = check_duplicate_post(userId, content)
             if is_duplicate:
                 st.warning("You've already shared similar content recently.")
-                
+            
             success, message = insert_post(userId, content, image_url)
             
             if success:

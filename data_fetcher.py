@@ -278,8 +278,10 @@ def get_user_daily_workout_data(user_id) -> dict:
       - calories: Total calories burned
       - advice_timestamp: The most recent EndTimestamp in "YYYY-MM-DD HH:MM:SS" format
     """
+    from google.cloud import bigquery
+    
     client = bigquery.Client(project="roberttechx25")
-    query = f"""
+    query = """
         SELECT 
           StartTimestamp, 
           EndTimestamp, 
@@ -287,12 +289,16 @@ def get_user_daily_workout_data(user_id) -> dict:
           TotalSteps, 
           CaloriesBurned
         FROM `roberttechx25.ISE.Workouts`
-        WHERE UserId = '{user_id}'
+        WHERE UserId = @user_id
           AND DATE(EndTimestamp) = CURRENT_DATE()
         ORDER BY EndTimestamp DESC
     """
-    job = client.query(query)
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
+    )
+    job = client.query(query, job_config=query_config)
     results = list(job.result())
+    
     if not results:
         return {"distance": 0.0, "steps": 0, "calories": 0, "advice_timestamp": "1970-01-01 00:00:00"}
     
@@ -300,6 +306,7 @@ def get_user_daily_workout_data(user_id) -> dict:
     total_steps = 0
     total_calories = 0
     most_recent_end = None
+    
     for row in results:
         total_distance += row["TotalDistance"] or 0
         total_steps += row["TotalSteps"] or 0
@@ -307,9 +314,15 @@ def get_user_daily_workout_data(user_id) -> dict:
         end_ts = row["EndTimestamp"]
         if most_recent_end is None or end_ts > most_recent_end:
             most_recent_end = end_ts
+            
     advice_timestamp = most_recent_end.strftime("%Y-%m-%d %H:%M:%S") if most_recent_end else "1970-01-01 00:00:00"
-    return {"distance": total_distance, "steps": total_steps, "calories": total_calories, "advice_timestamp": advice_timestamp}
-
+    
+    return {
+        "distance": total_distance,
+        "steps": total_steps,
+        "calories": total_calories,
+        "advice_timestamp": advice_timestamp
+    }
 
 def get_genai_advice(user_id):
     """

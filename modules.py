@@ -280,7 +280,7 @@ def check_duplicate_post(user_id, content):
         FROM `roberttechx25.ISE.Posts` 
         WHERE AuthorId = @user_id
         AND Content LIKE @content_pattern
-        AND Timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR)
+        AND Timestamp >= DATETIME_SUB(CURRENT_DATETIME(), INTERVAL 24 HOUR)
     """
     content_words = content.split()
     if content_words:
@@ -307,7 +307,7 @@ def insert_post(user_id, content, image_url=None):
     post_id = f"post_{uuid.uuid4().hex[:8]}"
     query = """
         INSERT INTO `roberttechx25.ISE.Posts` (PostId, AuthorId, Timestamp, ImageUrl, Content)
-        VALUES (@post_id, @author_id, CURRENT_TIMESTAMP(), @image_url, @content)
+        VALUES (@post_id, @author_id, DATETIME(CURRENT_TIMESTAMP()), @image_url, @content)
     """
     query_config = bigquery.QueryJobConfig(
         query_parameters=[
