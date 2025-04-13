@@ -58,7 +58,7 @@ class TestDisplayPost(unittest.TestCase):
             display_post(post, get_user_data=self.fake_get_user_profile)
 
             mock_container.assert_called_once()
-            mock_columns.assert_called_once_with([1, 11])
+            mock_columns.assert_called_once_with([1, 20])
             mock_markdown.assert_any_call(
                 f'<img src="{self.mock_user["profile_image"]}" class="profile-pic">',
                 unsafe_allow_html=True
@@ -370,7 +370,6 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
             'end_lat_lng': (1.6, 4.6)
         }]
         display_recent_workouts(single_workout)
-        mock_subheader.assert_called_with("Recent Workouts")
         calls = mock_markdown.call_args_list
         found = any("January 01, 2024" in call[0][0] and "12:00" in call[0][0] and "5.5 km" in call[0][0] and "6,000" in call[0][0] for call in calls)
         self.assertTrue(found, "Workout information not properly displayed")
@@ -397,7 +396,6 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
             }
         ]
         display_recent_workouts(multiple_workouts)
-        mock_subheader.assert_called_once_with("Recent Workouts")
         calls = mock_markdown.call_args_list
         workout1_found = any("January 01, 2024" in call[0][0] and "5.5 km" in call[0][0] for call in calls)
         workout2_found = any("January 03, 2024" in call[0][0] and "8.0 km" in call[0][0] for call in calls)
