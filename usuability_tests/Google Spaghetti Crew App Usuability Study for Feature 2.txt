@@ -1,0 +1,115 @@
+Usability Testing Document for Spaghetti Team workout Application
+
+Participant Introduction Script
+
+"Hello, thank you for participating in our usability test today. My name is Juan Alvarado and I'm part of the team developing the Spaghetti Crew Workout App, a new fitness tracking application centered around running. Today, we'd like you to interact with some paper prototypes we created and wanted your feedback on your experience with them.
+During our test, we'd like you to assume the role of someone who regularly exercises and wants to track their fitness progress. As you interact with our prototype, please think aloud to yourself, don’t be afraid to share your thoughts, whatever comes to mind, any expectations, and any confusion you might experience with the protype. This will help us understand your thought process.
+Really there are no right or wrong ways to use our prototype. We're testing the design, not you, however your honest feedback will help us improve the application before development so we’d appreciate it if you can be as candid as possible. Feel free to ask any questions, though we might not answer right away as we want to see how intuitive the interface is and if you can figure it out for yourself. Do you have any questions for us before we begin?"
+
+Tasks
+Task 1: Joining a Weekly Leaderboard
+"You're interested in adding some competition to your fitness routine. Let's go ahead and join one of the active weekly challenge leaderboards. What do you think you might use this feature for?"
+Task 2: Finding Last Week's Winner
+"You're curious about how competitive the leaderboards are. Navigate to the leaderboards and look for one of last week's winners. Who came in first place?"
+
+Observatory Notes:
+Participant 1
+* Joining Weekly Leaderboard: 
+o Searched navibar menu repeatedly
+o Missed leaderboard module initially that was on the community page, went to the activity page instead looking for it.
+o Purpose: "I'd use this to compete with friends or compare with similar fitness goals"
+o Tried clicking the actual leaderboard names instead of either one of the join buttons to the side. 
+* Finding Last Week's Winner: 
+o Clicked on “View Challenge leaderboards” and found last week’s leaderboards on a separate page
+o Looking for "some kind of history or archive option" to check previous weeks leaderboards. 
+o Had no trouble identifying the winner
+
+Participant 2
+* Joining Weekly Leaderboard: 
+o Checked the navibar, tried "Community Page" first
+o Said "I would expect all the leaderboards to be in the community section and not a separate page"
+o Unsure if join was successful due to minimal feedback, no visible action when clicking on the button
+o Purpose: "I'd use this to stay motivated, especially for running challenges"
+
+* Finding Last Week's Winner: 
+o Found the winner but commented "The layout makes it hard to tell who's in what position"
+o Suggested "Maybe pictures, or emojis or clearer ranking numbers would help"
+
+Feedback Questions
+
+After each task is completed:
+1. "On a scale of 1-10, with 10 being very easy, how would you rate the difficulty of completing this task?"
+2. "What, if anything, confused you while trying to complete the assigned task?"
+3. "What would have made this easier for you?"
+
+After all tasks are completed:
+1. "What were your overall impressions of this feature of our application?"
+2. "Was there anything that stood out to you, either positive or negative?"
+3. "If you could change one thing about the interface or layout, what would it be?"
+
+Results from Testing
+
+Issue 1: Navigation Confusion for Leaderboard Access
+
+Description: Both participants struggled to find the leaderboard feature, initially looking for it in the Activity Page rather than recognizing it on the landing page. Some expected all the information to be on the community page, instead of displaying the leaderboards on a separate page. 
+
+Participant Quote: "I would expect all leaderboards to be in the social or community section and not a separate page." 
+
+Hypothesis: The placement of leaderboards doesn't align with users' mental expectations. Users associate leaderboards with community/social features rather than activity tracking. 
+
+Proposed Solution: Either move leaderboards to the Community Page section or add a prominent link/tab to leaderboards from both the Community and Activity pages. Ensure consistent navigation paths to this feature so that regardless what page the user is on they can navigate to the leaderboards and back. 
+
+Issue 2: Unclear Joining Mechanism
+
+Description: Participants tried clicking on leaderboard names instead of the join buttons, and one participant was unsure if the join action was successful due to minimal feedback. 
+Participant Quote: "Unsure if join was successful due to minimal feedback, no visible action when clicking on the button."
+ 
+Hypothesis: The join button may not be visually distinctive enough, and the system lacks clear feedback to confirm successful actions.
+
+Proposed Solution: Redesign join buttons to be more prominent Add immediate visual feedback when a user joins a leaderboard (animation, color change, confirmation message).
+Issue 3: Difficulty Identifying Rankings
+
+Description: While one participant had no trouble identifying the winner, the second participant found it difficult to determine positions in the leaderboard ranking display. 
+Participant Quote: "The layout makes it hard to tell who's in what position." 
+
+Hypothesis: The ranking visualization lacks clear visuals and position indicators that would make winners and rankings immediately apparent.
+ 
+Proposed Solution: Redesign the leaderboard display to clearly highlight the first-place position (perhaps with a crown or medal icon), use more distinct visual separation between positions, and add profile pictures as suggested by the participant to make identification easier.
+
+Issue 4: Limited Historical Leaderboard Access
+
+Description: Participants were interested in viewing leaderboards from further back than just the previous week, suggesting a need for more comprehensive historical data. 
+
+Participant Quote: "Looking for some kind of history or archive option to check previous weeks leaderboards besides just the previous week." 
+
+Hypothesis: Users want to track progress and competition over longer periods, but the current design only provides access to the most recent past leaderboard.
+ 
+Proposed Solution: Add an archive or history section that allows users to browse leaderboards from multiple past weeks or months, potentially with filtering options by time period or challenge type.
+Updates to Prototypes
+Feature 1: Weekly Leaderboard Joining Process
+Before: Leaderboards were primarily accessible from the Community Page, with small text-based join buttons next to leaderboard names. No clear feedback was provided when users joined a leaderboard.
+
+After:
+1. Added a prominent "Leaderboards" tab in both the Community and Activity navigation menus
+2. Redesigned join buttons to be visually distinctive with clear button styling
+3. Added immediate visual feedback when joining (button changes to "Joined" with a checkmark, brief animation)
+4. Made leaderboard names visually distinct from join buttons to prevent confusion
+
+Rationale: These changes address the navigation confusion expressed by both participants and provide better clear visual feedback requested by Participant 2. The redesigned UI aligns better with users' mental models by connecting leaderboards to both activity tracking and social features.
+
+Feature 2: Leaderboard Navigation and Winner Display
+Before: Leaderboard rankings were displayed in a simple list format with minimal visual indicators of position. Only the previous week's leaderboard was accessible, with no way to view older historical data.
+
+After:
+1. Redesigned the ranking display with a clearer visual hierarchy: 
+o First place prominently featured at the top with a gold medal icon
+o Profile pictures added for all participants as suggested
+o Distinct visual styling for different ranking tiers (top 3, top 10, etc.)
+2. Added an "Archive" section allowing users to browse leaderboards from up to 8 previous weeks
+3. Improved navigation between current and past leaderboards with timeline visualization
+
+Rationale: These changes address Participant 2's difficulty identifying rankings and Participant 1's desire for more historical data. The improved visual hierarchy makes winners immediately apparent, while the archive feature 
+satisfies users' interest in longer-term competitive trends and personal progress tracking.
+
+
+
