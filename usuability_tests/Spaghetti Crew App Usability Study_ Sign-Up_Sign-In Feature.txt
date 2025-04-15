@@ -1,0 +1,117 @@
+﻿Spaghetti Crew App Usability Study: Sign-Up/Sign-In Feature
+
+Participant Introduction
+
+"Hello, thank you for participating in our usability test today. My name is Foluso Onatemowo and I'm part of the team developing the Spaghetti Crew Workout App, a new fitness tracking application centered around running. Today, we'd like you to interact with some paper prototypes we created for our sign-up and sign-in process and provide feedback on your experience.
+During our test, please assume the role of someone who wants to start using a new fitness app to track their running activities. As you interact with our prototype, please think aloud - share your thoughts, expectations, and any confusion you might experience. This will help us understand your thought process.
+There are no right or wrong ways to use our prototype. We're testing the design, not you. Your honest feedback will help us improve the application before development, so please be as candid as possible. Feel free to ask questions, though I might not answer right away as we want to see how intuitive the interface is. Do you have any questions before we begin?"
+
+Tasks
+Task 1: Creating a New Account "Imagine you've just downloaded the Spaghetti Crew app and want to create a new account to start tracking your runs. How would you go about setting up your account?"
+Task 2: Logging In to Your Account "Now imagine you've already set up an account previously, but you're using the app on a new device. How would you access your existing account?"
+
+Observatory Notes
+Participant 1
+* Creating New Account:
+
+   * Hesitated between the header "Sign Up" and "Sign In" buttons, unsure which to press despite being on the main screen
+   * Clicked the "Sign Up" in the header instead of proceeding directly with the form already visible on screen
+   * When filling out form fields, paused at password confirmation: "I'm not sure if this is working correctly since both password boxes look identical"
+   * Tried clicking on the app logo, expecting it to do something
+   * Eventually found the "Sign Up" button at the bottom but mentioned: "This button doesn't really stand out from everything else"
+   * Logging In:
+
+      * Looked for a way to switch to login from the signup page
+      * Found the "Sign In" text link at the bottom but wasn't immediately sure if it was clickable
+      * On the sign-in page, commented: "There are too many ways to sign in - both at the top and bottom of the screen"
+      * Successfully completed task but noted: "The button doesn't really look like a button"
+
+Participant 2
+      * Creating New Account:
+
+         * First tried clicking on the main content area, ignoring both the form and the header buttons
+         * Said: "I don't immediately see where to start"
+         * Eventually noticed the form fields but commented: "These boxes all look the same, I can't tell which are more important"
+         * Filled out the form but hesitated before pressing the "Sign Up" button: "I'm not sure if this is the main action button or just another text field"
+         * Expressed confusion about seeing Sign Up options in multiple places
+         * Logging In:
+
+            * Navigated to Sign In via the header button even though there was a text link below
+            * On the sign-in page, commented: "It's strange that the Sign Up and Sign In buttons are still in the header when I'm already on the Sign In page"
+            * Successfully logged in but mentioned: "The Sign In button doesn't stand out enough from the rest of the page"
+
+Feedback Questions
+
+After each task was completed:
+            1. "On a scale of 1-10, with 10 being very easy, how would you rate the difficulty of completing this task?"
+
+Participant 1:
+
+               * Creating account: "I'd give it a 6. It was somewhat intuitive but the buttons didn't stand out."
+               * Logging in: "About a 7. I knew what to do but wasn't sure which button to press at first."
+               2. Participant 2:
+
+                  * Creating account: "Probably a 5. I had to look around to figure out where to start."
+                  * Logging in: "A 6. I found it, but the navigation was confusing with duplicate options."
+                  3. "What, if anything, confused you while trying to complete the assigned task?"
+
+Participant 1:
+
+                     * "The Sign Up and Sign In buttons in the header were confusing because they appeared on every screen, even when I was already on that screen."
+                     * "The buttons at the bottom of the forms didn't look much different from the form fields themselves."
+                     4. Participant 2:
+
+                        * "I was confused by having multiple ways to do the same action. Why are there Sign Up buttons both in the header and on the form?"
+                        * "All the elements on the page look similar in importance - I couldn't tell what was a main action and what was just information."
+                        5. "What would have made this easier for you?"
+
+Participant 1:
+
+                           * "Make the action buttons more prominent, maybe with color or size."
+                           * "Remove the Sign Up/Sign In options from the header when you're already on those pages."
+                           6. Participant 2:
+
+                              * "The main buttons should be bigger and more obvious."
+                              * "It would help to have clearer labels showing which page I'm on."
+                              * "Maybe remove duplicate navigation options to simplify the screen."
+
+Results from Testing
+
+Issue 1: Lack of Visual Hierarchy for Primary Action Buttons
+Description: Both participants struggled to identify the primary action buttons (Sign In and Sign Up) because they weren't visually distinct from other elements on the page. The buttons had the same styling as form fields, making them difficult to recognize as clickable actions.
+Participant Quote: "The Sign In button doesn't really look like a button" and "I couldn't tell what was a main action and what was just information."
+Hypothesis: The current design lacks a clear visual hierarchy that would help users identify the most important actions. All elements having similar visual weight causes confusion about what's interactive and what's most important.
+Proposed Solution: Redesign the primary action buttons to be visually distinctive by:
+                              * Using a contrasting background color for the buttons
+                              * Making the buttons larger with more padding
+                              * Adding a subtle shadow or border to enhance their appearance as clickable elements
+                              * Positioning them prominently and with adequate white space around them
+
+Issue 2: Unclear Navigation Flow and Redundant Header Elements
+Description: Participants were confused by the presence of Sign Up and Sign In buttons in the header on every screen, even when they were already on the corresponding page. This redundancy created navigation uncertainty and made users question which options to use.
+Participant Quote: "It's strange that the Sign Up and Sign In buttons are still in the header when I'm already on the Sign In page."
+Hypothesis: The navigation design doesn't adapt to the current context, leading to redundant options that increase cognitive load. Users don't know which navigation element to trust or which is the "correct" path.
+Proposed Solution:
+                              * Remove the Sign Up/Sign In header buttons when a user is already on the corresponding page
+                              * Add clear page titles to indicate which screen the user is currently viewing
+                              * Maintain consistent positioning of alternative actions (e.g., "Already have an account? Sign In" always at the bottom of the Sign Up form)
+                              * Create a more linear flow between pages with clear forward/back navigation
+
+Updates to Prototypes
+Feature: Sign-Up/Sign-In Flow
+Before: The original designs showed Sign Up and Sign In buttons in the header of every screen regardless of context. Primary action buttons were styled similarly to form fields with minimal visual distinction. There was no clear indication of which screen the user was currently viewing.
+After:
+                              1. Improved visual hierarchy of primary action buttons:
+
+                                 * Made Sign Up and Sign In form buttons larger with rounded corners
+                                 * Added a distinctive blue background color to primary buttons
+                                 * Increased padding and white space around buttons
+                                 * Used bold text for button labels
+                                 2. Streamlined navigation and reduced redundancy:
+
+                                    * Removed Sign Up/Sign In tabs from the header when already on those pages
+                                    * Added clear page titles ("Create Your Account" and "Welcome Back") to indicate current screen
+                                    * Made alternative action links (e.g., "Already have an account?") more clearly styled as links
+                                    * Maintained consistent positioning of navigation elements across screens
+
+Rationale: These changes address the confusion expressed by both participants regarding which elements were interactive and how to navigate between screens. The improved visual hierarchy makes primary actions immediately identifiable, while the streamlined navigation reduces cognitive load by eliminating redundant options. The design now provides clearer guidance on the current context and available actions.
