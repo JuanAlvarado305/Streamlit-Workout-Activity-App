@@ -2,8 +2,8 @@ import streamlit as st
 from google.cloud import bigquery
 import time
 
-# Set page to wide mode - add this at the very beginning, before any other st commands
-st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
+# Remove the st.set_page_config line - this should only be in app.py
+# st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
 
 def authenticate_user(username, password):
     """
@@ -113,6 +113,8 @@ def login_page():
             with cols[1]:
                 st.markdown("[Forgot password?](#)")
 
-# Main entry point for the login page
+# For testing the login page directly
 if __name__ == "__main__":
+    # Only set page config if running this file directly
+    st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
     login_page()
