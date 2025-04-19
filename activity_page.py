@@ -8,7 +8,8 @@ def activity_page_content():
 
     # --- Recent Workouts ---
     st.header("Recent Workouts")
-    user_id = "user1"  # Replace with actual user ID
+    # Get user_id from session state instead of hardcoding
+    user_id = st.session_state.user_id
     workouts = get_user_workouts(user_id)
     if workouts:
         display_recent_workouts(workouts)
@@ -44,6 +45,11 @@ def activity_page():
     # Create session state if running directly
     if 'page' not in st.session_state:
         st.session_state.page = 'activity'
+    
+    # Check if user is authenticated when running standalone
+    if 'authenticated' not in st.session_state or not st.session_state.authenticated:
+        st.error("Please log in first")
+        return
     
     # Add navigation button in the sidebar
     with st.sidebar:
