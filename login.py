@@ -54,6 +54,19 @@ def login_page():
     Returns:
         None
     """
+    # Check if returning from successful registration
+    if 'account_created' in st.session_state and st.session_state.account_created:
+        st.success("Account created successfully! Please log in with your new credentials.")
+        # Clear the flag to avoid showing the message again
+        st.session_state.account_created = False
+    
+    # Check for the back_to_login parameter in URL
+    query_params = st.experimental_get_query_params()
+    if "back_to_login" in query_params:
+        st.info("Please log in to access your account.")
+        # Clear the parameter to avoid showing the message again
+        st.experimental_set_query_params()
+    
     # For session state management
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
@@ -109,7 +122,8 @@ def login_page():
             st.markdown("---")
             cols = st.columns(2)
             with cols[0]:
-                st.markdown("[Register new account](#)")
+                # Link to registration page
+                st.markdown("[Register new account](/register)")
             with cols[1]:
                 st.markdown("[Forgot password?](#)")
 
