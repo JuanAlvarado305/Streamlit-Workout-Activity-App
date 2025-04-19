@@ -13,7 +13,6 @@ from modules import display_my_custom_component, display_post, display_genai_adv
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts
 from activity_page import activity_page_content  # Import function instead of module
 from login import login_page  # Import the login page function
-from register import register_page  # Import the registration page function
 
 # Create a session state variable to track the current page
 if 'page' not in st.session_state:
@@ -229,15 +228,16 @@ def motivate(userId):
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
-    # Get current route
-    query_params = st.experimental_get_query_params()
-    
-    # Handle routing for registration page
-    if 'register' in st.experimental_get_query_params():
-        register_page()
-    # Check if user is authenticated for other routes
-    elif not st.session_state.authenticated:
-        login_page()  # Show login page if not authenticated
+    # Check if user is authenticated
+    if not st.session_state.authenticated:
+        # Check if account was just created
+        if 'account_created' in st.session_state and st.session_state.account_created:
+            st.success("Account created successfully! Please log in with your new credentials.")
+            # Clear the flag to avoid showing the message again
+            st.session_state.account_created = False
+        
+        # Show login page
+        login_page()
     else:
         # If authenticated, check the current page and display appropriate content
         if st.session_state.page == 'home':

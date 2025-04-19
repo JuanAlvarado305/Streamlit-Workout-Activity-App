@@ -4,6 +4,8 @@ import time
 import re
 import uuid
 
+st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Register")
+
 def validate_email(email):
     """Validate email format using regex pattern."""
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
@@ -120,100 +122,94 @@ def create_user(full_name, username, email, password, date_of_birth):
         error_msg = f"Error creating user: {e}"
         return False, error_msg
 
-def register_page():
-    """Display the registration page and handle account creation."""
-    st.title("Create New Account")
-    
-    # Back to login link
-    st.markdown("[← Back to Login](/?back_to_login=true)")
-    
-    # Registration form
-    with st.form("registration_form"):
-        full_name = st.text_input("Full Name*")
-        username = st.text_input("Username*", help="Choose a unique username for your account")
-        email = st.text_input("Email Address*")
-        password = st.text_input("Password*", type="password", 
-                               help="Password must be at least 8 characters with uppercase, lowercase, and numbers")
-        confirm_password = st.text_input("Confirm Password*", type="password")
-        date_of_birth = st.date_input("Date of Birth*")
-        
-        # Terms and conditions checkbox
-        agree_terms = st.checkbox("I agree to the Terms and Conditions")
-        
-        submit_button = st.form_submit_button("Create Account")
-        
-        if submit_button:
-            # Validation checks
-            error = False
-            
-            if not full_name or not username or not email or not password or not confirm_password:
-                st.error("All fields marked with * are required")
-                error = True
-            
-            if not error and check_username_exists(username):
-                st.error("This username is already taken. Please choose another one.")
-                error = True
-                
-            if not error and check_email_exists(email):
-                st.error("This email is already registered. Please use another email or try to log in.")
-                error = True
-            
-            if not error and not validate_email(email):
-                st.error("Please enter a valid email address")
-                error = True
-                
-            if not error:
-                password_valid, password_msg = validate_password(password)
-                if not password_valid:
-                    st.error(password_msg)
-                    error = True
-            
-            if not error and password != confirm_password:
-                st.error("Passwords do not match")
-                error = True
-                
-            if not error and not agree_terms:
-                st.error("You must agree to the Terms and Conditions")
-                error = True
-                
-            # If all validations pass, create the user
-            if not error:
-                with st.spinner("Creating your account..."):
-                    dob_str = date_of_birth.strftime("%Y-%m-%d")
-                    success, result = create_user(full_name, username, email, password, dob_str)
-                    
-                    if success:
-                        st.success("Account created successfully! You can now log in.")
-                        # Set up session state to indicate account was created successfully
-                        if 'account_created' not in st.session_state:
-                            st.session_state.account_created = True
-                        time.sleep(2)
-                        # Redirect to login page
-                        st.rerun()
-                    else:
-                        st.error(f"Failed to create account: {result}")
-    
-    # Add some instructions and info below the form
-    st.markdown("---")
-    st.subheader("Join the Spaghetti Crew Workout Community")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### Benefits")
-        st.markdown("• Track your workouts and progress")
-        st.markdown("• Connect with friends")
-        st.markdown("• Share your fitness achievements")
-        st.markdown("• Get personalized workout suggestions")
-    
-    with col2:
-        st.markdown("### Privacy")
-        st.markdown("• Your data is securely stored")
-        st.markdown("• You control what you share")
-        st.markdown("• We never sell your information")
-        st.markdown("[View our Privacy Policy](#)")
+# Page title
+st.title("Create New Account")
 
-if __name__ == "__main__":
-    # Only set page config if running this file directly
-    st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Register")
-    register_page()
+# Back to login link
+st.page_link("app.py", label="← Back to Login")
+
+# Registration form
+with st.form("registration_form"):
+    full_name = st.text_input("Full Name*")
+    username = st.text_input("Username*", help="Choose a unique username for your account")
+    email = st.text_input("Email Address*")
+    password = st.text_input("Password*", type="password", 
+                           help="Password must be at least 8 characters with uppercase, lowercase, and numbers")
+    confirm_password = st.text_input("Confirm Password*", type="password")
+    date_of_birth = st.date_input("Date of Birth*")
+    
+    # Terms and conditions checkbox
+    agree_terms = st.checkbox("I agree to the Terms and Conditions")
+    
+    submit_button = st.form_submit_button("Create Account")
+    
+    if submit_button:
+        # Validation checks
+        error = False
+        
+        if not full_name or not username or not email or not password or not confirm_password:
+            st.error("All fields marked with * are required")
+            error = True
+        
+        if not error and check_username_exists(username):
+            st.error("This username is already taken. Please choose another one.")
+            error = True
+            
+        if not error and check_email_exists(email):
+            st.error("This email is already registered. Please use another email or try to log in.")
+            error = True
+        
+        if not error and not validate_email(email):
+            st.error("Please enter a valid email address")
+            error = True
+            
+        if not error:
+            password_valid, password_msg = validate_password(password)
+            if not password_valid:
+                st.error(password_msg)
+                error = True
+        
+        if not error and password != confirm_password:
+            st.error("Passwords do not match")
+            error = True
+            
+        if not error and not agree_terms:
+            st.error("You must agree to the Terms and Conditions")
+            error = True
+            
+        # If all validations pass, create the user
+        if not error:
+            with st.spinner("Creating your account..."):
+                dob_str = date_of_birth.strftime("%Y-%m-%d")
+                success, result = create_user(full_name, username, email, password, dob_str)
+                
+                if success:
+                    st.success("Account created successfully! You can now log in.")
+                    # Set up session state to indicate account was created successfully
+                    if 'account_created' not in st.session_state:
+                        st.session_state.account_created = True
+                    # Redirect to main page after 2 seconds
+                    time.sleep(2)
+                    st.switch_page("app.py")
+                else:
+                    st.error(f"Failed to create account: {result}")
+
+# Add some instructions and info below the form
+st.markdown("---")
+st.subheader("Join the Spaghetti Crew Workout Community")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("### Benefits")
+    st.markdown("• Track your workouts and progress")
+    st.markdown("• Connect with friends")
+    st.markdown("• Share your fitness achievements")
+    st.markdown("• Get personalized workout suggestions")
+
+with col2:
+    st.markdown("### Privacy")
+    st.markdown("• Your data is securely stored")
+    st.markdown("• You control what you share")
+    st.markdown("• We never sell your information")
+    st.markdown("[View our Privacy Policy](#)")

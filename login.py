@@ -2,9 +2,6 @@ import streamlit as st
 from google.cloud import bigquery
 import time
 
-# Remove the st.set_page_config line - this should only be in app.py
-# st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
-
 def authenticate_user(username, password):
     """
     Authenticates a user against the database.
@@ -59,13 +56,6 @@ def login_page():
         st.success("Account created successfully! Please log in with your new credentials.")
         # Clear the flag to avoid showing the message again
         st.session_state.account_created = False
-    
-    # Check for the back_to_login parameter in URL
-    query_params = st.experimental_get_query_params()
-    if "back_to_login" in query_params:
-        st.info("Please log in to access your account.")
-        # Clear the parameter to avoid showing the message again
-        st.experimental_set_query_params()
     
     # For session state management
     if 'authenticated' not in st.session_state:
@@ -122,8 +112,8 @@ def login_page():
             st.markdown("---")
             cols = st.columns(2)
             with cols[0]:
-                # Link to registration page
-                st.markdown("[Register new account](/register)")
+                # Fixed link to registration page - this is what needed to be corrected
+                st.page_link("pages/1_Register.py", label="Register new account")
             with cols[1]:
                 st.markdown("[Forgot password?](#)")
 
