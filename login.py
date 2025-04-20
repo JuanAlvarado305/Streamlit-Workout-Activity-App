@@ -144,7 +144,7 @@ def login_page():
                 # Fixed link to registration page - this is what needed to be corrected
                 st.page_link("pages/1_Register.py", label="Register new account")
             with cols[1]:
-                st.markdown("[Forgot password?](#)")
+                st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
 
 # For testing the login page directly
 if __name__ == "__main__":
