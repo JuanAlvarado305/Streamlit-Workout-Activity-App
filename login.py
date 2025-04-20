@@ -51,6 +51,35 @@ def login_page():
     Returns:
         None
     """
+    # Hide the sidebar and hamburger menu with more aggressive CSS
+    st.markdown("""
+    <style>
+        /* Hide sidebar and hamburger menu */
+        section[data-testid="stSidebar"] {display: none;}
+        button[kind="header"] {display: none;}
+        [data-testid="collapsedControl"] {display: none !important;}
+        
+        /* Additional selectors to ensure complete hiding */
+        header button[aria-label="Menu"] {display: none !important;}
+        .st-emotion-cache-zq5wmm.ezrtsby0 {display: none !important;}
+        div[data-testid="stToolbar"] {display: none !important;}
+        
+        /* Hide the main menu on top right of the page */
+        .stApp > header {
+            display: none !important;
+        }
+        
+        /* Expand main content to full width */
+        .main .block-container {
+            max-width: 100%;
+            padding-top: 1rem;
+            padding-right: 1rem;
+            padding-left: 1rem;
+            padding-bottom: 1rem;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # Check if returning from successful registration
     if 'account_created' in st.session_state and st.session_state.account_created:
         st.success("Account created successfully! Please log in with your new credentials.")
@@ -120,5 +149,5 @@ def login_page():
 # For testing the login page directly
 if __name__ == "__main__":
     # Only set page config if running this file directly
-    st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
+    st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login", initial_sidebar_state="collapsed")
     login_page()
