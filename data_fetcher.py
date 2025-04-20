@@ -443,7 +443,7 @@ def login_user(username, password):
 
 
 def register_user(username, full_name, password):
-    client = bigquery.Client()
+    client = bigquery.Client(project="roberttechx25")
 
     #Verify that the user exists
     check_query = """
