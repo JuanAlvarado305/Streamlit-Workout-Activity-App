@@ -120,13 +120,20 @@ def login_page():
             
         
             # Registration or password reset links could go here
-            st.markdown("---")
-            cols = st.columns(2)
-            with cols[0]:
-                # Fixed link to registration page - this is what needed to be corrected
-                st.page_link("pages/1_Register.py", label="Register new account")
-            with cols[1]:
-                st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
+                    
+                    cols = st.columns(2)
+                # Registration or password reset links
+
+
+        # Create three columns with different widths
+        col1, col2, col3, col4, col5,col6,col7 = st.columns([1, 1, 1, 1, 1,1,1])  
+
+        # Use the middle columns for the links
+        with col3:
+            st.page_link("pages/1_Register.py", label="Register new account")
+
+        with col5:
+            st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
 
 
 def load_lottieurl(url: str):
