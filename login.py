@@ -43,11 +43,6 @@ def login_page():
             padding-left: 1rem;
             padding-bottom: 1rem;
         }
-        
-        /* Center links */
-        div.css-1629p8f.e1nzilvr1 {
-            text-align: center;
-        }
     </style>
     """, unsafe_allow_html=True)
     
@@ -124,16 +119,14 @@ def login_page():
                                 st.error(f"Invalid username or password. Try again. ({st.session_state.login_attempts})")
             
         
-            # Registration or password reset links
+            # Registration or password reset links could go here
             st.markdown("---")
-            
-            # Center links using HTML/CSS
-            st.markdown("""
-            <div style='display: flex; justify-content: center; gap: 20px;'>
-                <a href='pages/1_Register.py' target='_self'>Register new account</a>
-                <a href='https://www.youtube.com/watch?v=dQw4w9WgXcQ' target='_blank'>Forgot password?</a>
-            </div>
-            """, unsafe_allow_html=True)
+            cols = st.columns(2)
+            with cols[0]:
+                # Fixed link to registration page - this is what needed to be corrected
+                st.page_link("pages/1_Register.py", label="Register new account")
+            with cols[1]:
+                st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
 
 
 def load_lottieurl(url: str):
