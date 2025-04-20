@@ -1,7 +1,6 @@
 import streamlit as st
 from data_fetcher import get_user_workouts, get_user_profile, get_user_posts, get_user_sensor_data
 from modules import  display_recent_workouts, display_activity_summary, create_workout_content, display_post_preview, check_duplicate_post, insert_post, display_user_sensor_data
-from app import userId, workoutId
 
 
 
@@ -9,6 +8,9 @@ from app import userId, workoutId
 
 def activity_page():
     # Add custom CSS focusing on making the activity summary taller
+
+    userId = st.session_state.user_id
+
     st.markdown(
         """
     <style>
