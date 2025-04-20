@@ -230,7 +230,14 @@ def motivate(userId):
 if __name__ == '__main__':
     # Check if user is authenticated
     if not st.session_state.authenticated:
-        login_page()  # Show login page if not authenticated
+        # Check if account was just created
+        if 'account_created' in st.session_state and st.session_state.account_created:
+            st.success("Account created successfully! Please log in with your new credentials.")
+            # Clear the flag to avoid showing the message again
+            st.session_state.account_created = False
+        
+        # Show login page
+        login_page()
     else:
         # If authenticated, check the current page and display appropriate content
         if st.session_state.page == 'home':
