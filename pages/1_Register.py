@@ -211,4 +211,4 @@ with col2:
     st.markdown("• Your data is securely stored")
     st.markdown("• You control what you share")
     st.markdown("• We never sell your information")
-    st.markdown("[View our Privacy Policy](#)")
+    st.markdown("[View our Privacy Policy](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
