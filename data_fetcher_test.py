@@ -7,6 +7,8 @@
 #############################################################################
 
 import unittest
+import hashlib
+import uuid
 from unittest.mock import patch, MagicMock
 from data_fetcher import (
     get_user_posts,
@@ -14,6 +16,9 @@ from data_fetcher import (
     get_user_profile,
     get_user_sensor_data,
     get_user_workouts,
+    hash_password,
+    login_user,
+    register_user
 )
 
 # Create fake credentials for authentication patching
@@ -300,6 +305,64 @@ class TestGetGenaiAdvice(unittest.TestCase):
         self.assertTrue(result["content"])
         self.assertIn("alicej", result["content"].lower())
         self.assertEqual(result["timestamp"], "2024-07-29 08:00:00")
+
+class TestAuthFunctions(unittest.TestCase):
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_login_user_success(self, mock_client_class):
+        """Returns user dict if username and password match"""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [{
+            "UserId": "user-123",
+            "Username": "testuser"
+        }]
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = login_user("testuser", "Test1234")
+        self.assertIsNotNone(result)
+        self.assertEqual(result["UserId"], "user-123")
+        self.assertEqual(result["Username"], "testuser")
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_login_user_invalid_credentials(self, mock_client_class):
+        """Returns None if username or password is incorrect"""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = login_user("wronguser", "WrongPass123")
+        self.assertIsNone(result)
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_register_user_success(self, mock_client_class):
+        """Registers a new user if username is available"""
+        mock_client = MagicMock()
+        # First query: check if username exists
+        mock_check_job = MagicMock()
+        mock_check_job.result.return_value = []
+        # Second query: insert user (no result needed)
+        mock_insert_job = MagicMock()
+        mock_client.query.side_effect = [mock_check_job, mock_insert_job]
+        mock_client_class.return_value = mock_client
+
+        result = register_user("newuser", "New User", "NewPass123")
+        self.assertEqual(result, "¡Successfully registered!")
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_register_user_duplicate_username(self, mock_client_class):
+        """Returns error message if username already exists"""
+        mock_client = MagicMock()
+        mock_check_job = MagicMock()
+        mock_check_job.result.return_value = [{"Username": "existinguser"}]
+        mock_client.query.return_value = mock_check_job
+        mock_client_class.return_value = mock_client
+
+        result = register_user("existinguser", "Existing User", "SomePass123")
+        self.assertEqual(result, "That username is already in use.")
 
 
 if __name__ == "__main__":
