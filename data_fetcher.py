@@ -442,7 +442,7 @@ def login_user(username, password):
         return None
 
 
-def register_user(username, password):
+def register_user(username, full_name, password):
     client = bigquery.Client()
 
     #Verify that the user exists
@@ -465,12 +465,13 @@ def register_user(username, password):
 
     #Insert the new user
     insert_query = f"""
-        INSERT INTO `roberttechx25.ISE.Users` (UserId, Username, password_hash)
-        VALUES (@user_id, @username, @password_hash)
+        INSERT INTO `roberttechx25.ISE.Users` (UserId, Name, Username, password_hash)
+        VALUES (@user_id, @name, @username, @password_hash)
     """
     insert_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("name", "STRING", full_name),
             bigquery.ScalarQueryParameter("username", "STRING", username),
             bigquery.ScalarQueryParameter("password_hash", "STRING", password_hash),
         ]
