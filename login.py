@@ -1,51 +1,10 @@
 import streamlit as st
-from google.cloud import bigquery
 import time
+from data_fetcher import login_user
 
 # Remove the st.set_page_config line - this should only be in app.py
 # st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
 
-def authenticate_user(username, password):
-    """
-    Authenticates a user against the database.
-    
-    Args:
-        username (str): The username entered by the user
-        password (str): The password entered by the user
-        
-    Returns:
-        tuple: (success, user_id) where success is a boolean indicating whether
-               authentication was successful, and user_id is the user's ID if successful
-    """
-    try:
-        # In a real app, you would query BigQuery for user credentials
-        # and verify the password with proper hashing
-        client = bigquery.Client(project="roberttechx25")
-        query = """
-            SELECT UserId, Password
-            FROM `roberttechx25.ISE.Users`
-            WHERE Username = @username
-        """
-        query_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("username", "STRING", username)
-            ]
-        )
-        results = list(client.query(query, job_config=query_config).result())
-        
-        if not results:
-            return False, None
-            
-        # In a real app, you would use password hashing!
-        # This is simplified for demo purposes
-        stored_password = results[0].Password
-        if password == stored_password:
-            return True, results[0].UserId
-        return False, None
-    
-    except Exception as e:
-        st.error(f"Authentication error: {e}")
-        return False, None
 
 def login_page():
     """
@@ -88,11 +47,11 @@ def login_page():
                         with st.spinner("Authenticating..."):
                             # Add a small delay to simulate authentication process
                             time.sleep(0.5)
-                            success, user_id = authenticate_user(username, password)
+                            user = login_user(username, password)
                             
-                            if success:
+                            if user:
                                 st.session_state.authenticated = True
-                                st.session_state.user_id = user_id
+                                st.session_state.user_id = user["UserId"]
                                 st.success("Login successful! Redirecting...")
                                 time.sleep(1)  # Brief delay for the success message to be visible
                                 st.rerun()  # Refresh the page to apply session state changes
@@ -100,10 +59,6 @@ def login_page():
                                 st.session_state.login_attempts += 1
                                 st.error(f"Invalid username or password. Try again. ({st.session_state.login_attempts})")
             
-            # Demo credentials for testing (For real app, you would remove this)
-            st.markdown("---")
-            st.caption("For demo purposes, try:")
-            st.code("Username: user1\nPassword: password123")
         
             # Registration or password reset links could go here
             st.markdown("---")

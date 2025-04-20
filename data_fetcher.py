@@ -10,6 +10,8 @@
 
 import random
 import datetime
+import uuid
+import hashlib
 from google.cloud import bigquery
 
 users = {
@@ -411,3 +413,68 @@ def get_genai_advice(user_id):
         "content": chosen_advice,
         "image": image,
     }
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def login_user(username, password):
+    client = bigquery.Client(project="roberttechx25")
+
+    query = """
+        SELECT UserId, Username
+        FROM `roberttechx25.ISE.Users`
+        WHERE Username = @username
+        AND password_hash = @password_hash
+    """
+    
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("username", "STRING", username),
+            bigquery.ScalarQueryParameter("password_hash", "STRING", hash_password(password))
+        ]
+    )
+    
+    results = list(client.query(query, job_config=query_config).result())
+
+    if results:
+        return dict(results[0])  # returns UserId and Username
+    else:
+        return None
+
+
+def register_user(username, password):
+    client = bigquery.Client()
+
+    #Verify that the user exists
+    check_query = """
+        SELECT Username FROM `roberttechx25.ISE.Users`
+        WHERE Username = @username
+    """
+    config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("username", "STRING", username)
+        ]
+    )
+    existing = list(client.query(check_query, job_config=config).result())
+    if existing:
+        return "That username is already in use."
+
+    #Generates Id and Hash
+    user_id = str(uuid.uuid4())
+    password_hash = hash_password(password)
+
+    #Insert the new user
+    insert_query = f"""
+        INSERT INTO `roberttechx25.ISE.Users` (UserId, Username, password_hash)
+        VALUES (@user_id, @username, @password_hash)
+    """
+    insert_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("username", "STRING", username),
+            bigquery.ScalarQueryParameter("password_hash", "STRING", password_hash),
+        ]
+    )
+    client.query(insert_query, job_config=insert_config)
+
+    return "¡Successfully registered!"
