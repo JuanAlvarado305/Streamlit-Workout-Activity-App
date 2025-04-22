@@ -479,3 +479,33 @@ def register_user(username, full_name, password):
     client.query(insert_query, job_config=insert_config)
 
     return "¡Successfully registered!"
+
+
+def get_current_week_challenges():
+    """Returns a list of current weekly challenges with participant counts."""
+    client = bigquery.Client(project="roberttechx25")
+    today = datetime.date.today()
+
+    query = """
+        SELECT 
+            c.ChallengeId AS id,
+            c.Name AS name,
+            COUNT(p.UserId) AS participantCount
+        FROM `roberttechx25.ISE.Challenges` AS c
+        LEFT JOIN `roberttechx25.ISE.ChallengeParticipants` AS p
+            ON c.ChallengeId = p.ChallengeId
+        WHERE @today BETWEEN c.StartDate AND c.EndDate
+        GROUP BY c.ChallengeId, c.Name
+        ORDER BY participantCount DESC
+    """
+
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("today", "DATE", today)
+        ]
+    )
+
+    query_job = client.query(query, job_config=query_config)
+    results = list(query_job.result())
+
+    return [dict(row) for row in results]

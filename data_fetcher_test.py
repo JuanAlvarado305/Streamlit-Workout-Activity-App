@@ -18,7 +18,8 @@ from data_fetcher import (
     get_user_workouts,
     hash_password,
     login_user,
-    register_user
+    register_user,
+    get_current_week_challenges
 )
 
 # Create fake credentials for authentication patching
@@ -364,6 +365,52 @@ class TestAuthFunctions(unittest.TestCase):
         result = register_user("existinguser", "Existing User", "SomePass123")
         self.assertEqual(result, "That username is already in use.")
 
+class TestGetCurrentWeekChallenges(unittest.TestCase):
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_current_challenges_success(self, mock_client_class):
+        """Returns a list of current challenges with participant counts."""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [
+            {"id": "steps_2025_04_14_uid", "name": "Steps Challenge", "participantCount": 182},
+            {"id": "distance_2025_04_14_uid", "name": "Distance Challenge", "participantCount": 150},
+        ]
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_current_week_challenges()
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["id"], "steps_2025_04_14_uid")
+        self.assertEqual(result[0]["participantCount"], 182)
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_current_challenges_empty_result(self, mock_client_class):
+        """Returns empty list if no challenges are active."""
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []
+
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        result = get_current_week_challenges()
+        self.assertEqual(result, [])
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_get_current_challenges_with_error(self, mock_client_class):
+        """Returns empty list if BigQuery throws an exception."""
+        mock_client = MagicMock()
+        mock_client.query.side_effect = Exception("BigQuery error")
+
+        mock_client_class.return_value = mock_client
+
+        try:
+            result = get_current_week_challenges()
+        except Exception as e:
+            result = []
+
+        self.assertEqual(result, [])
 
 if __name__ == "__main__":
     unittest.main()
