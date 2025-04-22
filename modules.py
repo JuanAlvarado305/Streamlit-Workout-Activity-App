@@ -76,7 +76,7 @@ def display_post(post, get_user_data=get_user_profile):
                 line-height: 1.6;
             }
             .post-image {
-                width: 100%;
+                width: 75%;
                 border-radius: 10px;
                 margin-top: 10px;
             }
@@ -94,26 +94,28 @@ def display_post(post, get_user_data=get_user_profile):
         """,
         unsafe_allow_html=True
     )
-
-    with st.container():
+    
+    
         # Header: profile picture and user info
-        col1, col2 = st.columns([1, 20])
-        with col1:
-            st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
-        with col2:
-            st.markdown(
-                f"""
-                <div class="post-info">
-                    <strong>{username}</strong>
-                    <span>{formatted_time}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        # Post Content and optional image
-        st.markdown(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
-        if post_image:
-            st.image(post_image, use_container_width=True)
+    col1, col2 = st.columns([1, 20])
+    with col1:
+        st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
+    with col2:
+        st.markdown(
+            f"""
+            <div class="post-info">
+                <strong>{username}</strong>
+                <span>{formatted_time}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    # Post Content and optional image
+    st.markdown(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
+    if post_image:
+        st.markdown(f'<img src="{post_image}" class="post-image">', unsafe_allow_html=True)
+
+    
 
 def display_activity_summary(workouts_list):
     """Displays a summary of user workout activities.
