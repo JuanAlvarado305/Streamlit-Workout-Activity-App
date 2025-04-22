@@ -1,6 +1,10 @@
 import streamlit as st
 import time
+import json
+import requests
 from data_fetcher import login_user
+from streamlit_lottie import st_lottie
+
 
 # Remove the st.set_page_config line - this should only be in app.py
 # st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login")
@@ -64,10 +68,30 @@ def login_page():
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col2:
-            st.title("Welcome to Spaghetti Crew Workout App")
+            st.markdown("<h1 style='text-align: center'>Start your workout journey</h1>", unsafe_allow_html=True)
+
             
-            # Logo or app branding could go here
-            st.image("https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg", width=200)
+            
+            
+            # Try to load a default Lottie animation from a local file or a different URL
+            try:
+                # Option 1: Try a different URL for the Lottie animation
+                lottie_url = "https://lottie.host/3cabd8b1-4c60-4bea-8b1a-a22da0494f93/zkDH17AbQR.json"
+                lottie_runner = load_lottieurl(lottie_url)
+                
+                if lottie_runner:
+                    st_lottie(
+                        lottie_runner,
+                        speed=3,
+                        reverse=False,
+                        loop=True,
+                        quality="high",
+                        height=400
+                    )
+                # If loading fails, we'll just continue without showing an animation
+            except Exception as e:
+                # Just skip the animation if it fails, no need to show an error
+                pass
             
             # Form inputs
             with st.form("login_form"):
@@ -98,14 +122,43 @@ def login_page():
             
         
             # Registration or password reset links could go here
-            st.markdown("---")
-            cols = st.columns(2)
-            with cols[0]:
-                if st.button("Register new account"):
+                    
+                    cols = st.columns(2)
+                # Registration or password reset links
+
+
+        # Create three columns with different widths
+        col1, col2, col3, col4, col5,col6,col7 = st.columns([1, 1, 1, 1, 1,1,1])  
+
+        # Use the middle columns for the links
+        with col3:
+            if st.button("Register new account"):
                     st.session_state.current_page = 'register'
                     st.rerun()
-            with cols[1]:
-                st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
+
+        with col5:
+            st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
+
+
+def load_lottieurl(url: str):
+    """
+    Load a Lottie animation from a URL
+    
+    Args:
+        url (str): URL to the Lottie animation
+        
+    Returns:
+        dict: The Lottie animation as a dictionary, or None if loading fails
+    """
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception as e:
+        # Just return None instead of raising an error
+        return None
+
 
 # For testing the login page directly
 if __name__ == "__main__":
