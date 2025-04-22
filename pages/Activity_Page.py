@@ -1,7 +1,6 @@
 import streamlit as st
 from data_fetcher import get_user_workouts, get_user_profile, get_user_posts, get_user_sensor_data
 from modules import  display_recent_workouts, display_activity_summary, create_workout_content, display_post_preview, check_duplicate_post, insert_post, display_user_sensor_data
-from app import userId, workoutId
 
 
 
@@ -9,6 +8,10 @@ from app import userId, workoutId
 
 def activity_page():
     # Add custom CSS focusing on making the activity summary taller
+
+    userId = st.session_state.user_id
+    user_workouts = get_user_workouts(userId)
+
     st.markdown(
         """
     <style>
@@ -55,7 +58,6 @@ def activity_page():
         # Maybe add quick stats in sidebar
         st.markdown("---")
         st.subheader("Quick Stats")
-        user_workouts = get_user_workouts(userId)
         st.metric("Total Workouts", len(user_workouts))
         st.metric("This Week", sum(1 for w in user_workouts if w.get('is_current_week', False)))
         
@@ -67,9 +69,6 @@ def activity_page():
         st.markdown("Foluso")
         st.markdown("Loie")
 
-    # Fetch user data if not already fetched in sidebar
-    if 'user_workouts' not in locals():
-        user_workouts = get_user_workouts(userId)
 
     st.title("Activity Summary")
 
@@ -81,15 +80,15 @@ def activity_page():
     #st.markdown("---")
 
     # Fetch sensor data for the given workout and display it.
-    sensor_data = get_user_sensor_data(userId, workoutId)
+    sensor_data = get_user_sensor_data(userId, "workout2")
     display_user_sensor_data(sensor_data)
     
     # --- Recent Workouts ---
     st.header("Recent Workouts")
-    # userId = "user1"  # Replace with actual user ID
-    workouts = get_user_workouts(userId)
-    if workouts:
-        display_recent_workouts(workouts)
+    
+    user_workouts = get_user_workouts(userId)
+    if user_workouts:
+        display_recent_workouts(user_workouts)
     else:
         st.write("No recent workouts found.")
 
@@ -100,8 +99,8 @@ def activity_page():
     st.write("Preview your activity to share:")
 
     # Get workout content from external function if workouts exist
-    if workouts:  # Assuming workouts is defined earlier
-        default_content = create_workout_content(workouts[0])  # External function
+    if user_workouts:  # Assuming workouts is defined earlier
+        default_content = create_workout_content(user_workouts[0])  # External function
     else:
         default_content = "Just completed a workout! Feeling great!"
 

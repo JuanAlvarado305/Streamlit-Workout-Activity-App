@@ -3,3 +3,5 @@ google-cloud-bigquery
 pandas
 plotly
 vertexai
+streamlit-lottie
+requests
