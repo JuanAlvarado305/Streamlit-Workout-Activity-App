@@ -22,8 +22,8 @@ You should see the correct files printed out.
 
 ```shell
 $ ls
-app.py             data_fetcher.py       internals.py  modules_test.py  requirements.txt
-custom_components  data_fetcher_test.py  modules.py    README.md        run-streamlit.sh
+Community_Page.py   data_fetcher.py        Dockerfile     LICENSE   modules.py        pages        __pycache__   requirements.txt  'Team Agreement.pdf'   venv
+custom_components   data_fetcher_test.py   internals.py   mockups   modules_test.py   prototypes   README.md     run-streamlit.sh   usuability_tests
 ```
 
 Run the following command to run the app locally. Note that if you make changes, you just
@@ -31,7 +31,7 @@ need to refresh the server and the new changes should appear (you do not need to
 the following command while you are actively making changes).
 
 ```shell
-$ streamlit run app.py
+$ streamlit run Community_Page.py
 ```
 
 ### Using Docker to run the Streamlit app
