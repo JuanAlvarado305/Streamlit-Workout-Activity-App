@@ -256,4 +256,4 @@ if __name__ == '__main__':
             if st.button("Return to Home"):
                 nav_to_home()
             # Display activity page content
-            activity_page_()
+            activity_page()
