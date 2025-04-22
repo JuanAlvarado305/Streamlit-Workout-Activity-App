@@ -11,8 +11,9 @@ st.set_page_config(layout="wide")
 
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts
-from activity_page import activity_page_content  # Import function instead of module
-from login import login_page  # Import the login page function
+from pages.Activity_Page import activity_page # Import function instead of module
+from pages.hidden.login import login_page  # Import the login page function
+from pages.hidden.register import register_page
 
 # Create a session state variable to track the current page
 if 'page' not in st.session_state:
@@ -21,6 +22,10 @@ if 'page' not in st.session_state:
 # Check if user is authenticated
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
+
+# Track current page within login/register flow
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 'login'
 
 # Function to navigate to activity page
 def nav_to_activity():
@@ -236,8 +241,11 @@ if __name__ == '__main__':
             # Clear the flag to avoid showing the message again
             st.session_state.account_created = False
         
-        # Show login page
-        login_page()
+        
+        if st.session_state.current_page == 'login':
+            login_page()
+        elif st.session_state.current_page == 'register':
+            register_page()
     else:
         # If authenticated, check the current page and display appropriate content
         if st.session_state.page == 'home':
@@ -248,4 +256,4 @@ if __name__ == '__main__':
             if st.button("Return to Home"):
                 nav_to_home()
             # Display activity page content
-            activity_page_content()
+            activity_page_()

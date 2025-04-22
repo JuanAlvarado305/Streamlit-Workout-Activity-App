@@ -55,6 +55,8 @@ def login_page():
         st.session_state.user_id = None
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 'login'
     
     # Display login form only if not authenticated
     if not st.session_state.authenticated:
@@ -99,8 +101,9 @@ def login_page():
             st.markdown("---")
             cols = st.columns(2)
             with cols[0]:
-                # Fixed link to registration page - this is what needed to be corrected
-                st.page_link("pages/1_Register.py", label="Register new account")
+                if st.button("Register new account"):
+                    st.session_state.current_page = 'register'
+                    st.rerun()
             with cols[1]:
                 st.markdown("[Forgot password?](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
 
