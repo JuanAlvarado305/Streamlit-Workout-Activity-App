@@ -77,7 +77,10 @@ class TestDisplayPost(unittest.TestCase):
                 f"<p class='post-content'>{post['Content']} #GoogleTech2025</p>",
                 unsafe_allow_html=True
             )
-            mock_image.assert_called_once_with(post["ImageUrl"], use_container_width=True)
+            mock_markdown.assert_any_call(
+                f'<img src="{post["ImageUrl"]}" class="post-image">', 
+                unsafe_allow_html=True
+            )
 
     @patch("modules.get_user_profile")
     def test_display_post_without_image(self, mock_get_profile):

@@ -96,24 +96,25 @@ def display_post(post, get_user_data=get_user_profile):
     )
     
     
-        # Header: profile picture and user info
-    col1, col2 = st.columns([1, 20])
-    with col1:
-        st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
-    with col2:
-        st.markdown(
-            f"""
-            <div class="post-info">
-                <strong>{username}</strong>
-                <span>{formatted_time}</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    # Post Content and optional image
-    st.markdown(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
-    if post_image:
-        st.markdown(f'<img src="{post_image}" class="post-image">', unsafe_allow_html=True)
+    # Header: profile picture and user info
+    with st.container():
+        col1, col2 = st.columns([1, 20])
+        with col1:
+            st.markdown(f'<img src="{user_image}" class="profile-pic">', unsafe_allow_html=True)
+        with col2:
+            st.markdown(
+                f"""
+                <div class="post-info">
+                    <strong>{username}</strong>
+                    <span>{formatted_time}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        # Post Content and optional image
+        st.markdown(f"<p class='post-content'>{content} #GoogleTech2025</p>", unsafe_allow_html=True)
+        if post_image:
+            st.markdown(f'<img src="{post_image}" class="post-image">', unsafe_allow_html=True)
 
     
 
