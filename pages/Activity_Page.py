@@ -63,11 +63,11 @@ def activity_page():
         
         #Team Members 
         st.markdown("---")
-        st.subheader("Spaghetti Crew Team")
-        st.markdown("Juan")
-        st.markdown("Jona")
-        st.markdown("Foluso")
-        st.markdown("Loie")
+        st.subheader("Secert Santa Crew")
+        st.markdown("James Bond")
+        st.markdown("Dr.No")
+        st.markdown("Darth Vadar")
+        st.markdown("Count Dracula")
 
 
     st.title("Activity Summary")

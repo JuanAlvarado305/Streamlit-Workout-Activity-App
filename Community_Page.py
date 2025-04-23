@@ -81,11 +81,11 @@ def display_home_page():
             logout()
 
         # Team Members Section
-        st.subheader("Spaghetti Crew Team")
-        st.markdown("Juan")
-        st.markdown("Jona")
-        st.markdown("Foluso")
-        st.markdown("Loie")
+        st.subheader("Secert Santa Crew")
+        st.markdown("Capitan Kirk")
+        st.markdown("Data")
+        st.markdown("Spock")
+        st.markdown("Q")
         st.markdown("---")
 
     # --- Main Page Content ---
