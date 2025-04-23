@@ -8,7 +8,7 @@
 #############################################################################
 
 import streamlit as st
-from data_fetcher import get_user_profile, get_week_challenges, get_current_leaderboard_data, get_last_weeks_leaderboard_data, get_challenge_id, get_joined_challenge, join_challenge
+from data_fetcher import get_user_profile, get_current_week_challenges, get_week_challenges, get_last_week_challenges, get_challenge_id, get_joined_challenge, join_challenge
 from html import escape
 from internals import create_component
 from datetime import datetime
@@ -676,7 +676,7 @@ def challenge_page(user_id):
     start_of_week = today - datetime.timedelta(days=today.weekday())
     end_of_week = start_of_week + datetime.timedelta(days=6)
     
-    current_challenges = get_current_leaderboard_data()
+    current_challenges = get_current_week_challenges() #get_current_leaderboard_data()
     date_range = current_challenges[0]
     leaderboards = current_challenges[1]
     
@@ -698,7 +698,7 @@ def challenge_page(user_id):
     # Display last week's winners
     st.header("Last Week's Winners")
     
-    last_week_data = get_last_weeks_leaderboard_data()
+    last_week_data = get_last_week_challenges #get_last_weeks_leaderboard_data()
     last_week_range = last_week_data[0]
     last_week_leaderboards = last_week_data[1]
     
