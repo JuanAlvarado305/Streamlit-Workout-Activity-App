@@ -480,32 +480,280 @@ def register_user(username, full_name, password):
 
     return "¡Successfully registered!"
 
+def get_latest_two_challenges():
+    """
+    Pulls the two most recent challenge date‐ranges from the DB,
+    returning ((this_start, this_end), (last_start, last_end)).
+    """
+    client = bigquery.Client(project="roberttechx25")
+    query = """
+        SELECT StartDate, EndDate
+        FROM `roberttechx25.ISE.Challenges`
+        ORDER BY EndDate DESC
+        LIMIT 2
+    """
+    rows = list(client.query(query).result())
+    if len(rows) < 2:
+        # Fallback: infer last week as 7 days before
+        this_start, this_end = rows[0].StartDate, rows[0].EndDate
+        last_start = this_start - datetime.timedelta(days=7)
+        last_end   = this_end   - datetime.timedelta(days=7)
+        return (this_start, this_end), (last_start, last_end)
+    return (rows[0].StartDate, rows[0].EndDate), (rows[1].StartDate, rows[1].EndDate)
+
+
+def get_week_challenges(start_date, end_date):
+    """
+    Returns data for weekly challenges between the given dates
+    
+    Args:
+        start_date: date or string in format YYYY-MM-DD
+        end_date: date or string in format YYYY-MM-DD
+        
+    Returns:
+        A list with two elements:
+        - Element 0: [start_date, end_date] 
+        - Element 1: List of 3 lists (one for each challenge type: distance, steps, workouts)
+          Each inner list contains dictionaries of participants with their stats
+    """
+    client = bigquery.Client(project="roberttechx25")
+    
+    # Convert dates to string format if they aren't already
+    if not isinstance(start_date, str):
+        start_date = start_date.strftime("%Y-%m-%d")
+    if not isinstance(end_date, str):
+        end_date = end_date.strftime("%Y-%m-%d")
+    
+    # First, get the challenge IDs for the given date range
+    challenge_query = """
+        SELECT ChallengeId, Type
+        FROM `roberttechx25.ISE.Challenges`
+        WHERE StartDate <= @end_date AND EndDate >= @start_date
+        ORDER BY Type
+    """
+    
+    challenge_params = [
+        bigquery.ScalarQueryParameter("start_date", "DATE", start_date),
+        bigquery.ScalarQueryParameter("end_date", "DATE", end_date)
+    ]
+    
+    challenge_job_config = bigquery.QueryJobConfig(query_parameters=challenge_params)
+    challenge_results = client.query(challenge_query, job_config=challenge_job_config).result()
+    challenges = [dict(row) for row in challenge_results]
+    
+    if not challenges:
+        return [[start_date, end_date], [[], [], []]]
+    
+    # For each challenge, get the participants and their metrics
+    challenge_data = [[], [], []]  # Distance, Steps, Workouts
+    
+    for challenge in challenges:
+        challenge_id = challenge["ChallengeId"]
+        challenge_type = challenge["Type"]
+        
+        # Get participants and their metrics for this challenge
+        metrics_query = """
+            SELECT 
+                cm.UserId,
+                u.Username,
+                u.ImageUrl AS profile_image,
+                cm.Value
+            FROM `roberttechx25.ISE.ChallengeMetrics` cm
+            JOIN `roberttechx25.ISE.Users` u ON cm.UserId = u.UserId
+            WHERE cm.ChallengeId = @challenge_id
+            ORDER BY cm.Value DESC
+            LIMIT 10
+        """
+        
+        metrics_params = [
+            bigquery.ScalarQueryParameter("challenge_id", "STRING", challenge_id)
+        ]
+        
+        metrics_job_config = bigquery.QueryJobConfig(query_parameters=metrics_params)
+        metrics_results = client.query(metrics_query, job_config=metrics_job_config).result()
+        
+        participants = []
+        for row in metrics_results:
+            participant = {
+                "user_id": row["UserId"],
+                "username": row["Username"],
+                "profile_image": row["profile_image"],
+                "value": row["Value"]
+            }
+            participants.append(participant)
+        
+        # Add the participants to the appropriate challenge type list
+        if challenge_type.lower() == "distance":
+            challenge_data[0] = participants
+        elif challenge_type.lower() == "steps":
+            challenge_data[1] = participants
+        elif challenge_type.lower() == "workouts":
+            challenge_data[2] = participants
+    
+    #print(challenge_data)
+    return [[start_date, end_date], challenge_data]
 
 def get_current_week_challenges():
-    """Returns a list of current weekly challenges with participant counts."""
-    client = bigquery.Client(project="roberttechx25")
-    today = datetime.date.today()
+    """
+    Returns data for the current week's challenges
+    
+    Returns:
+        Same format as get_week_challenges
+    """
+    (this_start, this_end), _ = get_latest_two_challenges()
+    return get_week_challenges(this_start, this_end)
 
+def get_last_week_challenges():
+    """
+    Returns data for last week's challenges
+    
+    Returns:
+        Same format as get_week_challenges
+    """
+    # Calculate last week's start and end dates
+    _, (last_start, last_end) = get_latest_two_challenges()
+    return get_week_challenges(last_start, last_end)
+
+def get_challenge_id(start_date, end_date, challenge_type):
+    """
+    Retrieves the challenge ID for a specific type and date range
+    
+    Args:
+        start_date: date or string in format YYYY-MM-DD
+        end_date: date or string in format YYYY-MM-DD
+        challenge_type: string - "distance", "steps", or "workouts"
+        
+    Returns:
+        String - the challenge ID or None if not found
+    """
+    client = bigquery.Client(project="roberttechx25")
+    
+    # Convert dates to string format if they aren't already
+    if not isinstance(start_date, str):
+        start_date = start_date.strftime("%Y-%m-%d")
+    if not isinstance(end_date, str):
+        end_date = end_date.strftime("%Y-%m-%d")
+    
+    query = """
+        SELECT ChallengeId
+        FROM `roberttechx25.ISE.Challenges`
+        WHERE StartDate = @start_date 
+        AND EndDate = @end_date
+        AND LOWER(Type) = LOWER(@challenge_type)
+    """
+    
+    params = [
+        bigquery.ScalarQueryParameter("start_date", "DATE", start_date),
+        bigquery.ScalarQueryParameter("end_date", "DATE", end_date),
+        bigquery.ScalarQueryParameter("challenge_type", "STRING", challenge_type)
+    ]
+    
+    job_config = bigquery.QueryJobConfig(query_parameters=params)
+    results = client.query(query, job_config=job_config).result()
+    results_list = list(results)
+    
+    if results_list:
+        return results_list[0]["ChallengeId"]
+    return None
+
+def get_joined_challenge(challenge_id, user_id):
+    """
+    Checks if a user has joined a specific challenge
+    
+    Args:
+        challenge_id: String - the challenge ID
+        user_id: String - the user ID
+        
+    Returns:
+        Boolean - True if the user has joined the challenge, False otherwise
+    """
+    client = bigquery.Client(project="roberttechx25")
+    
+    query = """
+        SELECT COUNT(*) as count
+        FROM `roberttechx25.ISE.ChallengeParticipants`
+        WHERE ChallengeId = @challenge_id AND UserId = @user_id
+    """
+    
+    params = [
+        bigquery.ScalarQueryParameter("challenge_id", "STRING", challenge_id),
+        bigquery.ScalarQueryParameter("user_id", "STRING", user_id)
+    ]
+    
+    job_config = bigquery.QueryJobConfig(query_parameters=params)
+    results = client.query(query, job_config=job_config).result()
+    results_list = list(results)
+    
+    if results_list and results_list[0]["count"] > 0:
+        return True
+    return False
+
+def join_challenge(challenge_id, user_id):
+    """
+    Adds a user to a challenge
+    
+    Args:
+        challenge_id: String - the challenge ID
+        user_id: String - the user ID
+        
+    Returns:
+        Boolean - True if successful, False otherwise
+    """
+    # Check if the user has already joined this challenge
+    if get_joined_challenge(challenge_id, user_id):
+        return False
+    
+    client = bigquery.Client(project="roberttechx25")
+    
+    query = """
+        INSERT INTO `roberttechx25.ISE.ChallengeParticipants` (ChallengeId, UserId)
+        VALUES (@challenge_id, @user_id)
+    """
+    
+    params = [
+        bigquery.ScalarQueryParameter("challenge_id", "STRING", challenge_id),
+        bigquery.ScalarQueryParameter("user_id", "STRING", user_id)
+    ]
+    
+    job_config = bigquery.QueryJobConfig(query_parameters=params)
+    
+    try:
+        client.query(query, job_config=job_config).result()
+        return True
+    except Exception as e:
+        print(f"Error joining challenge: {e}")
+        return False
+
+def get_challenge_participant_counts():
+    """
+    Gets current participant counts for active challenges
+    
+    Returns:
+        Dictionary with challenge types as keys and participant counts as values
+    """
+    client = bigquery.Client(project="roberttechx25")
+    
     query = """
         SELECT 
-            c.ChallengeId AS id,
-            c.Name AS name,
-            COUNT(p.UserId) AS participantCount
-        FROM `roberttechx25.ISE.Challenges` AS c
-        LEFT JOIN `roberttechx25.ISE.ChallengeParticipants` AS p
-            ON c.ChallengeId = p.ChallengeId
-        WHERE @today BETWEEN c.StartDate AND c.EndDate
-        GROUP BY c.ChallengeId, c.Name
-        ORDER BY participantCount DESC
+            c.Type,
+            COUNT(DISTINCT cp.UserId) as participant_count
+        FROM `roberttechx25.ISE.Challenges` c
+        LEFT JOIN `roberttechx25.ISE.ChallengeParticipants` cp ON c.ChallengeId = cp.ChallengeId
+        WHERE CURRENT_DATE() BETWEEN c.StartDate AND c.EndDate
+        GROUP BY c.Type
     """
-
-    query_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter("today", "DATE", today)
-        ]
-    )
-
-    query_job = client.query(query, job_config=query_config)
-    results = list(query_job.result())
-
-    return [dict(row) for row in results]
+    
+    results = client.query(query).result()
+    
+    counts = {
+        "distance": 0,
+        "steps": 0,
+        "workouts": 0
+    }
+    
+    for row in results:
+        challenge_type = row["Type"].lower()
+        if challenge_type in counts:
+            counts[challenge_type] = row["participant_count"]
+    
+    return counts

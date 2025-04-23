@@ -8,10 +8,10 @@
 #############################################################################
 
 import streamlit as st
-from data_fetcher import get_user_profile
+from data_fetcher import get_user_profile, get_current_week_challenges, get_week_challenges, get_last_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges
 from html import escape
 from internals import create_component
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 from google.cloud import bigquery
 import uuid
@@ -611,3 +611,146 @@ def display_user_sensor_data(sensor_data_list):
                 st.info(f"The {selected_sensor} values showed an increasing trend of approximately {change_pct:.1f}% from start to finish.")
             else:
                 st.info(f"The {selected_sensor} values showed a decreasing trend of approximately {abs(change_pct):.1f}% from start to finish.")
+
+# challenge_page.py
+
+def display_challenge(date_range, challenge_type, participant_data):
+    """Display a challenge leaderboard with participant rankings"""
+    # date_range from get_week_challenges comes back as ISO‐strings or date objects
+    raw_start, raw_end = date_range
+
+    # parse back to date if needed
+    if isinstance(raw_start, str):
+        start_date = datetime.strptime(raw_start, "%Y-%m-%d").date()
+    else:
+        start_date = raw_start
+
+    if isinstance(raw_end, str):
+        end_date = datetime.strptime(raw_end, "%Y-%m-%d").date()
+    else:
+        end_date = raw_end
+
+    # Header with formatted dates
+    st.subheader(
+        f"{start_date.strftime('%m/%d/%y')}-"
+        f"{end_date.strftime('%m/%d/%y')} {challenge_type} Challenge"
+    )
+
+    # If no participants, bail out
+    rows = min(len(participant_data), 10)
+    if rows == 0:
+        st.write("No participants yet!")
+        return
+
+    # Build the leaderboard
+    for i in range(rows):
+        participant = participant_data[i]
+        cols = st.columns([1, 3, 1])
+
+        # Rank column with medal for top 3
+        with cols[0]:
+            rank = participant.get("rank", i+1)
+            if rank == 1:
+                st.write("🥇 1st")
+            elif rank == 2:
+                st.write("🥈 2nd")
+            elif rank == 3:
+                st.write("🥉 3rd")
+            else:
+                st.write(f"{rank}th")
+
+        # User info column
+        with cols[1]:
+            username = participant.get("username", "User")
+            profile_image = participant.get("profile_image")
+            if profile_image:
+                pic_col, name_col = st.columns([1, 4])
+                with pic_col:
+                    st.image(profile_image, width=30)
+                with name_col:
+                    st.write(username)
+            else:
+                st.write(username)
+
+        # Value column
+        with cols[2]:
+            val = participant.get("value", 0)
+
+            if challenge_type == "Distance":
+                st.write(f"{val:.1f} mi")
+            elif challenge_type == "Steps":
+                st.write(f"{int(val):,} steps")
+            elif challenge_type == "Workouts":
+                if val == 1:
+                    st.write(f"{int(val)} workout")
+                else:
+                    st.write(f"{int(val)} workouts")
+
+def challenge_page(user_id):    
+    # Get current week's challenges
+    # (If you ever need to compute “this week” locally, do it like this:)
+    today         = datetime.today().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week   = start_of_week + timedelta(days=6)
+    
+    current_challenges = get_current_week_challenges() #get_current_leaderboard_data()
+    date_range = current_challenges[0]
+    leaderboards = current_challenges[1]
+    
+    # Display current week's challenges
+    st.header("Ongoing Challenges")
+    
+    # Use tabs for the three challenge types
+    tabs = st.tabs(["Distance Challenge", "Steps Challenge", "Workouts Challenge"])
+    
+    with tabs[0]:
+        display_challenge(date_range, "Distance", leaderboards[0])
+    
+    with tabs[1]:
+        display_challenge(date_range, "Steps", leaderboards[1])
+    
+    with tabs[2]:
+        display_challenge(date_range, "Workouts", leaderboards[2])
+    
+    st.markdown('###')
+    
+    # Display last week's winners
+    st.header("Last Week's Winners")
+    
+    last_week_data = get_last_week_challenges() #get_last_weeks_leaderboard_data()
+    last_week_range = last_week_data[0]
+    last_week_leaderboards = last_week_data[1]
+    
+    # Show winners message
+    distance_winner = last_week_leaderboards[0][0]["username"] if last_week_leaderboards[0] else "N/A"
+    steps_winner = last_week_leaderboards[1][0]["username"] if last_week_leaderboards[1] else "N/A"
+    workouts_winner = last_week_leaderboards[2][0]["username"] if last_week_leaderboards[2] else "N/A"
+    
+    st.write(f"Thank you all for competing! Congratulations :blue[{distance_winner}], :blue[{steps_winner}], and :blue[{workouts_winner}]!")
+    
+    # Use columns for the three leaderboards
+    cols = st.columns(3)
+    
+    with cols[0]:
+        st.subheader("Distance Challenge")
+        if last_week_leaderboards[0]:
+            for i, participant in enumerate(last_week_leaderboards[0][:5]):
+                rank = i + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
+                st.write(f"{medal} {participant['username']}: {participant['value']}")
+    
+    with cols[1]:
+        st.subheader("Steps Challenge")
+        if last_week_leaderboards[1]:
+            for i, participant in enumerate(last_week_leaderboards[1][:5]):
+                rank = i + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
+                st.write(f"{medal} {participant['username']}: {int(participant['value'])}")
+    
+    with cols[2]:
+        st.subheader("Workouts Challenge")
+        if last_week_leaderboards[2]:
+            for i, participant in enumerate(last_week_leaderboards[2][:5]):
+                rank = i + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
+                st.write(f"{medal} {participant['username']}: {int(participant['value'])}")

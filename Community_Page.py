@@ -8,9 +8,9 @@
 import streamlit as st
 # Set page to wide mode - add this at the very beginning, before any other st commands
 st.set_page_config(layout="wide")
-
-from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts
+import datetime
+from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data, challenge_page, display_challenge
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges, get_challenge_participant_counts
 from pages.Activity_Page import activity_page # Import function instead of module
 from pages.hidden.login import login_page  # Import the login page function
 from pages.hidden.register import register_page
@@ -79,6 +79,7 @@ def display_home_page():
         # Add logout button
         if st.button("Logout"):
             logout()
+        st.markdown("---")
 
         # Team Members Section
         st.subheader("Secert Santa Crew")
@@ -111,6 +112,12 @@ def display_home_page():
 
     except Exception as e:
         pass
+
+    st.markdown("---") # Separator before GenAI advice
+
+    challenge_components()
+    st.markdown('###')
+    challenge_page(userId)
 
     st.markdown("---") # Separator before GenAI advice
 
@@ -230,6 +237,100 @@ def motivate(userId):
     content = result['content']
     image = result['image']
     display_genai_advice(timestamp, content, image)
+
+
+def challenge_components():
+    user_id = st.session_state.user_id
+        
+    # Get current week's start and end dates
+    today = datetime.date.today()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+    end_of_week = start_of_week + datetime.timedelta(days=6)
+
+    st.title("Weekly Fitness Challenges")
+    
+    # Format dates for display
+    start_str = start_of_week.strftime("%m/%d/%y")
+    end_str = end_of_week.strftime("%m/%d/%y")
+    
+    st.header(f"New Weekly Challenges {start_str} - {end_str}")
+    
+    distance_challenge_id = get_challenge_id(start_of_week, end_of_week, "Distance")
+    steps_challenge_id = get_challenge_id(start_of_week, end_of_week, "Steps")
+    workouts_challenge_id = get_challenge_id(start_of_week, end_of_week, "Workouts")
+    
+    # Get participant counts for each challenge
+    current_participant_counts = get_challenge_participant_counts()
+    distance_count = current_participant_counts['distance']
+    steps_count = current_participant_counts['steps']
+    workouts_count = current_participant_counts['workouts']
+        
+    # Display each challenge with join button
+    cols = st.columns(3)
+    
+    with cols[0]:
+        # Initialize session state if it doesn't exist
+        if "distance_joined" not in st.session_state:
+            st.session_state["distance_joined"] = get_joined_challenge(distance_challenge_id, user_id) if distance_challenge_id else False
+
+        st.write(f"Distance Challenge | {distance_count} participants")
+
+        if st.session_state["distance_joined"]:
+            st.button("Joined", key="distance_joined_disabled", disabled=True)
+        else:
+            if st.button("Join", key="join_distance"):
+                if distance_challenge_id:
+                    success = join_challenge(distance_challenge_id, user_id)
+                    if success:
+                        st.success("Successfully joined Distance Challenge!")
+                        st.session_state["distance_joined"] = True  # Update session state
+                        st.experimental_rerun()
+                    else:
+                        st.error("Could not join challenge. Try again.")
+                else:
+                    st.error("Challenge not available yet")
+    
+    with cols[1]:
+        # Initialize session state for steps_joined
+        if "steps_joined" not in st.session_state:
+            st.session_state["steps_joined"] = get_joined_challenge(steps_challenge_id, user_id) if steps_challenge_id else False
+
+        st.write(f"Steps Challenge | {steps_count} participants")
+
+        if st.session_state["steps_joined"]:
+            st.button("Joined", key="steps_joined_disabled", disabled=True)  # Use a different key for the disabled button
+        else:
+            if st.button("Join", key="join_steps"):
+                if steps_challenge_id:
+                    success = join_challenge(steps_challenge_id, user_id)
+                    if success:
+                        st.success("Successfully joined Steps Challenge!")
+                        st.session_state["steps_joined"] = True  # Update the session state flag
+                        st.experimental_rerun()
+                    else:
+                        st.error("Could not join challenge. Try again.")
+                else:
+                    st.error("Challenge not available yet")
+    
+    with cols[2]:
+        if "workouts_joined" not in st.session_state:
+            st.session_state["workouts_joined"] = get_joined_challenge(workouts_challenge_id, user_id) if workouts_challenge_id else False
+
+        st.write(f"Workouts Challenge | {workouts_count} participants")
+        if st.session_state["workouts_joined"]:
+            st.button("Joined", key="workouts_joined_disabled", disabled=True)  # Use a different key
+        else:
+            if st.button("Join", key="join_workouts"):
+                if workouts_challenge_id:
+                    success = join_challenge(workouts_challenge_id, user_id)
+                    if success:
+                        st.success("Successfully joined Workouts Challenge!")
+                        st.session_state["workouts_joined"] = True
+                        st.experimental_rerun()
+                    else:
+                        st.error("Could not join challenge. Try again.")
+                else:
+                    st.error("Challenge not available yet")
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
