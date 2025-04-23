@@ -258,11 +258,6 @@ def community_page(): #(user_id):
     steps_challenge_id = get_challenge_id(start_of_week, end_of_week, "Steps")
     workouts_challenge_id = get_challenge_id(start_of_week, end_of_week, "Workouts")
     
-    # Check which challenges the user has joined
-    distance_joined = get_joined_challenge(distance_challenge_id, user_id) if distance_challenge_id else False
-    steps_joined = get_joined_challenge(steps_challenge_id, user_id) if steps_challenge_id else False
-    workouts_joined = get_joined_challenge(workouts_challenge_id, user_id) if workouts_challenge_id else False
-    
     # Get participant counts for each challenge
     challenges = get_week_challenges(start_of_week, end_of_week)
     distance_count = len(challenges[1][0])
@@ -273,15 +268,21 @@ def community_page(): #(user_id):
     cols = st.columns(3)
     
     with cols[0]:
+        # Initialize session state if it doesn't exist
+        if "distance_joined" not in st.session_state:
+            st.session_state["distance_joined"] = get_joined_challenge(distance_challenge_id, user_id) if distance_challenge_id else False
+
         st.write(f"Distance Challenge | {distance_count} participants")
-        if distance_joined:
-            st.button("Joined", key="distance_joined", disabled=True)
+
+        if st.session_state["distance_joined"]:
+            st.button("Joined", key="distance_joined_disabled", disabled=True)
         else:
             if st.button("Join", key="join_distance"):
                 if distance_challenge_id:
                     success = join_challenge(distance_challenge_id, user_id)
                     if success:
                         st.success("Successfully joined Distance Challenge!")
+                        st.session_state["distance_joined"] = True  # Update session state
                         st.experimental_rerun()
                     else:
                         st.error("Could not join challenge. Try again.")
@@ -289,15 +290,21 @@ def community_page(): #(user_id):
                     st.error("Challenge not available yet")
     
     with cols[1]:
+        # Initialize session state for steps_joined
+        if "steps_joined" not in st.session_state:
+            st.session_state["steps_joined"] = get_joined_challenge(steps_challenge_id, user_id) if steps_challenge_id else False
+
         st.write(f"Steps Challenge | {steps_count} participants")
-        if steps_joined:
-            st.button("Joined", key="steps_joined", disabled=True)
+
+        if st.session_state["steps_joined"]:
+            st.button("Joined", key="steps_joined_disabled", disabled=True)  # Use a different key for the disabled button
         else:
             if st.button("Join", key="join_steps"):
                 if steps_challenge_id:
                     success = join_challenge(steps_challenge_id, user_id)
                     if success:
                         st.success("Successfully joined Steps Challenge!")
+                        st.session_state["steps_joined"] = True  # Update the session state flag
                         st.experimental_rerun()
                     else:
                         st.error("Could not join challenge. Try again.")
@@ -305,15 +312,19 @@ def community_page(): #(user_id):
                     st.error("Challenge not available yet")
     
     with cols[2]:
+        if "workouts_joined" not in st.session_state:
+            st.session_state["workouts_joined"] = get_joined_challenge(workouts_challenge_id, user_id) if workouts_challenge_id else False
+
         st.write(f"Workouts Challenge | {workouts_count} participants")
-        if workouts_joined:
-            st.button("Joined", key="workouts_joined", disabled=True)
+        if st.session_state["workouts_joined"]:
+            st.button("Joined", key="workouts_joined_disabled", disabled=True)  # Use a different key
         else:
             if st.button("Join", key="join_workouts"):
                 if workouts_challenge_id:
                     success = join_challenge(workouts_challenge_id, user_id)
                     if success:
                         st.success("Successfully joined Workouts Challenge!")
+                        st.session_state["workouts_joined"] = True
                         st.experimental_rerun()
                     else:
                         st.error("Could not join challenge. Try again.")
