@@ -79,15 +79,14 @@ def display_home_page():
         # Add logout button
         if st.button("Logout"):
             logout()
+        st.markdown("---")
 
         # Team Members Section
-        st.subheader("Spaghetti Crew Team")
-        '''
-        st.markdown("Juan")
-        st.markdown("Jona")
-        st.markdown("Foluso")
-        st.markdown("Loie")
-        '''
+        # st.subheader("Spaghetti Crew Team")
+        # st.markdown("Juan")
+        # st.markdown("Jona")
+        # st.markdown("Foluso")
+        # st.markdown("Loie")
         st.markdown("---")
 
     # --- Main Page Content ---
