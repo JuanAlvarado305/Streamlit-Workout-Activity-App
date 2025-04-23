@@ -8,9 +8,9 @@
 import streamlit as st
 # Set page to wide mode - add this at the very beginning, before any other st commands
 st.set_page_config(layout="wide")
-
+import datetime
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge
 from pages.Activity_Page import activity_page # Import function instead of module
 from pages.hidden.login import login_page  # Import the login page function
 from pages.hidden.register import register_page
@@ -257,3 +257,90 @@ if __name__ == '__main__':
                 nav_to_home()
             # Display activity page content
             activity_page()
+
+
+# community_page.py
+
+def community_page(user_id):
+    st.title("Community")
+    
+    # Get current week's start and end dates
+    today = datetime.date.today()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+    end_of_week = start_of_week + datetime.timedelta(days=6)
+    
+    # Display weekly challenges section
+    st.header("Weekly Challenges")
+    
+    # Format dates for display
+    start_str = start_of_week.strftime("%m/%d/%y")
+    end_str = end_of_week.strftime("%m/%d/%y")
+    
+    st.subheader(f"New weekly challenges {start_str} - {end_str}")
+    
+    # Get challenge IDs
+    distance_challenge_id = get_challenge_id(start_of_week, end_of_week, "Distance")
+    steps_challenge_id = get_challenge_id(start_of_week, end_of_week, "Steps")
+    workouts_challenge_id = get_challenge_id(start_of_week, end_of_week, "Workouts")
+    
+    # Check which challenges the user has joined
+    distance_joined = get_joined_challenge(distance_challenge_id, user_id) if distance_challenge_id else False
+    steps_joined = get_joined_challenge(steps_challenge_id, user_id) if steps_challenge_id else False
+    workouts_joined = get_joined_challenge(workouts_challenge_id, user_id) if workouts_challenge_id else False
+    
+    # Get participant counts for each challenge
+    challenges = get_week_challenges(start_of_week, end_of_week)
+    distance_count = len(challenges[1][0])
+    steps_count = len(challenges[1][1])
+    workouts_count = len(challenges[1][2])
+    
+    # Display each challenge with join button
+    cols = st.columns(3)
+    
+    with cols[0]:
+        st.write(f"Distance Challenge | {distance_count} participants")
+        if distance_joined:
+            st.button("Joined", key="distance_joined", disabled=True)
+        else:
+            if st.button("Join", key="join_distance"):
+                if distance_challenge_id:
+                    success = join_challenge(distance_challenge_id, user_id)
+                    if success:
+                        st.success("Successfully joined Distance Challenge!")
+                        st.experimental_rerun()
+                    else:
+                        st.error("Could not join challenge. Try again.")
+                else:
+                    st.error("Challenge not available yet")
+    
+    with cols[1]:
+        st.write(f"Steps Challenge | {steps_count} participants")
+        if steps_joined:
+            st.button("Joined", key="steps_joined", disabled=True)
+        else:
+            if st.button("Join", key="join_steps"):
+                if steps_challenge_id:
+                    success = join_challenge(steps_challenge_id, user_id)
+                    if success:
+                        st.success("Successfully joined Steps Challenge!")
+                        st.experimental_rerun()
+                    else:
+                        st.error("Could not join challenge. Try again.")
+                else:
+                    st.error("Challenge not available yet")
+    
+    with cols[2]:
+        st.write(f"Workouts Challenge | {workouts_count} participants")
+        if workouts_joined:
+            st.button("Joined", key="workouts_joined", disabled=True)
+        else:
+            if st.button("Join", key="join_workouts"):
+                if workouts_challenge_id:
+                    success = join_challenge(workouts_challenge_id, user_id)
+                    if success:
+                        st.success("Successfully joined Workouts Challenge!")
+                        st.experimental_rerun()
+                    else:
+                        st.error("Could not join challenge. Try again.")
+                else:
+                    st.error("Challenge not available yet")

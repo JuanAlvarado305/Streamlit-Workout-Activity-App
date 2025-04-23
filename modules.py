@@ -8,7 +8,7 @@
 #############################################################################
 
 import streamlit as st
-from data_fetcher import get_user_profile
+from data_fetcher import get_user_profile, get_week_challenges, get_current_leaderboard_data, get_last_weeks_leaderboard_data, get_challenge_id, get_joined_challenge, join_challenge
 from html import escape
 from internals import create_component
 from datetime import datetime
@@ -612,6 +612,126 @@ def display_user_sensor_data(sensor_data_list):
             else:
                 st.info(f"The {selected_sensor} values showed a decreasing trend of approximately {abs(change_pct):.1f}% from start to finish.")
 
-def display_challenge_leaderboard(start_time, end_time, type, results):
-    #results is a list of each users and their metric
-    pass
+# challenge_page.py
+
+def display_challenge(date_range, challenge_type, participant_data):
+    """Display a challenge leaderboard with participant rankings"""
+    start_date, end_date = date_range[0], date_range[1]
+    
+    st.subheader(f"{start_date.strftime('%m/%d/%y')}-{end_date.strftime('%m/%d/%y')} {challenge_type} Challenge")
+    
+    # Format dates as display strings
+    start_str = start_date.strftime("%m/%d/%y")
+    end_str = end_date.strftime("%m/%d/%y")
+    
+    # Calculate number of rows needed
+    rows = min(len(participant_data), 10)
+    if rows == 0:
+        st.write("No participants yet!")
+        return
+    
+    # Create the leaderboard table
+    for i in range(rows):
+        participant = participant_data[i]
+        
+        # Create a row with columns: rank, user info, value
+        cols = st.columns([1, 3, 1])
+        
+        # Rank column with medal for top 3
+        with cols[0]:
+            rank = participant.get("rank", i+1)
+            if rank == 1:
+                st.write("🥇 1st")
+            elif rank == 2:
+                st.write("🥈 2nd")
+            elif rank == 3:
+                st.write("🥉 3rd")
+            else:
+                st.write(f"{rank}th")
+        
+        # User info column
+        with cols[1]:
+            username = participant.get("username", "User")
+            profile_image = participant.get("profile_image")
+            
+            # Create a horizontal layout for profile pic and username
+            if profile_image:
+                user_cols = st.columns([1, 4])
+                with user_cols[0]:
+                    st.image(profile_image, width=30)
+                with user_cols[1]:
+                    st.write(username)
+            else:
+                st.write(username)
+        
+        # Value column
+        with cols[2]:
+            st.write(participant.get("value", "0"))
+
+def challenge_page(user_id):
+    st.title("Weekly Fitness Challenges")
+    
+    # Get current week's challenges
+    today = datetime.date.today()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+    end_of_week = start_of_week + datetime.timedelta(days=6)
+    
+    current_challenges = get_current_leaderboard_data()
+    date_range = current_challenges[0]
+    leaderboards = current_challenges[1]
+    
+    # Display current week's challenges
+    st.header("Ongoing Challenges")
+    
+    # Use tabs for the three challenge types
+    tabs = st.tabs(["Distance Challenge", "Steps Challenge", "Workouts Challenge"])
+    
+    with tabs[0]:
+        display_challenge(date_range, "Distance", leaderboards[0])
+    
+    with tabs[1]:
+        display_challenge(date_range, "Steps", leaderboards[1])
+    
+    with tabs[2]:
+        display_challenge(date_range, "Workouts", leaderboards[2])
+    
+    # Display last week's winners
+    st.header("Last Week's Winners")
+    
+    last_week_data = get_last_weeks_leaderboard_data()
+    last_week_range = last_week_data[0]
+    last_week_leaderboards = last_week_data[1]
+    
+    # Show winners message
+    distance_winner = last_week_leaderboards[0][0]["username"] if last_week_leaderboards[0] else "N/A"
+    steps_winner = last_week_leaderboards[1][0]["username"] if last_week_leaderboards[1] else "N/A"
+    workouts_winner = last_week_leaderboards[2][0]["username"] if last_week_leaderboards[2] else "N/A"
+    
+    st.write(f"Thank you all for competing! Congratulations {distance_winner}, {steps_winner}, and {workouts_winner}!")
+    
+    # Use columns for the three leaderboards
+    cols = st.columns(3)
+    
+    with cols[0]:
+        st.subheader("Distance Challenge")
+        if last_week_leaderboards[0]:
+            for i, participant in enumerate(last_week_leaderboards[0][:5]):
+                rank = i + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
+                st.write(f"{medal} {participant['username']}: {participant['value']}")
+    
+    with cols[1]:
+        st.subheader("Steps Challenge")
+        if last_week_leaderboards[1]:
+            for i, participant in enumerate(last_week_leaderboards[1][:5]):
+                rank = i + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
+                st.write(f"{medal} {participant['username']}: {participant['value']}")
+    
+    with cols[2]:
+        st.subheader("Workouts Challenge")
+        if last_week_leaderboards[2]:
+            for i, participant in enumerate(last_week_leaderboards[2][:5]):
+                rank = i + 1
+                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
+                st.write(f"{medal} {participant['username']}: {participant['value']}")
