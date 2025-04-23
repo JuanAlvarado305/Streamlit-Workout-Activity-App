@@ -10,7 +10,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 import datetime
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data, challenge_page, display_challenge
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_challenge_participant_counts
 from pages.Activity_Page import activity_page # Import function instead of module
 from pages.hidden.login import login_page  # Import the login page function
 from pages.hidden.register import register_page
@@ -82,10 +82,12 @@ def display_home_page():
 
         # Team Members Section
         st.subheader("Spaghetti Crew Team")
+        '''
         st.markdown("Juan")
         st.markdown("Jona")
         st.markdown("Foluso")
         st.markdown("Loie")
+        '''
         st.markdown("---")
 
     # --- Main Page Content ---
@@ -258,10 +260,12 @@ def challenge_components():
     workouts_challenge_id = get_challenge_id(start_of_week, end_of_week, "Workouts")
     
     # Get participant counts for each challenge
+    current_participant_counts = get_challenge_participant_counts()
+    distance_count = current_participant_counts['distance']
+    steps_count = current_participant_counts['steps']
+    workouts_count = current_participant_counts['workouts']
+    
     leaderboard_data = get_week_challenges(start_of_week, end_of_week)
-    distance_count = len(leaderboard_data[1][0])
-    steps_count = len(leaderboard_data[1][1])
-    workouts_count = len(leaderboard_data[1][2])
 
     #don't think these indices are correct
     distance_leaderboard = leaderboard_data[1][0]
@@ -339,7 +343,7 @@ def challenge_components():
                 else:
                     st.error("Challenge not available yet")
 
-    #display_challenge(user_id, ...)
+    #display_challenge(date_range, challenge_type, participant_data)
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
