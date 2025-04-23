@@ -264,18 +264,7 @@ def challenge_components():
     distance_count = current_participant_counts['distance']
     steps_count = current_participant_counts['steps']
     workouts_count = current_participant_counts['workouts']
-    
-    leaderboard_data = get_week_challenges(start_of_week, end_of_week)
-
-    #don't think these indices are correct
-    distance_leaderboard = leaderboard_data[1][0]
-    steps_leaderboard = leaderboard_data[1][1]
-    workouts_leaderboard = leaderboard_data[1][2]
-
-    # print('distance', distance_leaderboard)
-    # print('steps', steps_leaderboard)
-    # print('workouts', workouts_leaderboard)
-    
+        
     # Display each challenge with join button
     cols = st.columns(3)
     
@@ -342,8 +331,6 @@ def challenge_components():
                         st.error("Could not join challenge. Try again.")
                 else:
                     st.error("Challenge not available yet")
-
-    #display_challenge(date_range, challenge_type, participant_data)
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
