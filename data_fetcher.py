@@ -480,6 +480,28 @@ def register_user(username, full_name, password):
 
     return "¡Successfully registered!"
 
+def get_latest_two_challenges():
+    """
+    Pulls the two most recent challenge date‐ranges from the DB,
+    returning ((this_start, this_end), (last_start, last_end)).
+    """
+    client = bigquery.Client(project="roberttechx25")
+    query = """
+        SELECT StartDate, EndDate
+        FROM `roberttechx25.ISE.Challenges`
+        ORDER BY EndDate DESC
+        LIMIT 2
+    """
+    rows = list(client.query(query).result())
+    if len(rows) < 2:
+        # Fallback: infer last week as 7 days before
+        this_start, this_end = rows[0].StartDate, rows[0].EndDate
+        last_start = this_start - datetime.timedelta(days=7)
+        last_end   = this_end   - datetime.timedelta(days=7)
+        return (this_start, this_end), (last_start, last_end)
+    return (rows[0].StartDate, rows[0].EndDate), (rows[1].StartDate, rows[1].EndDate)
+
+
 def get_week_challenges(start_date, end_date):
     """
     Returns data for weekly challenges between the given dates
@@ -578,13 +600,8 @@ def get_current_week_challenges():
     Returns:
         Same format as get_week_challenges
     """
-    # Calculate the current week's start and end dates
-    today = datetime.date.today()
-    # Assuming weeks start on Monday
-    start_date = today - datetime.timedelta(days=today.weekday())
-    end_date = start_date + datetime.timedelta(days=6)
-    
-    return get_week_challenges(start_date, end_date)
+    (this_start, this_end), _ = get_latest_two_challenges()
+    return get_week_challenges(this_start, this_end)
 
 def get_last_week_challenges():
     """
@@ -594,12 +611,8 @@ def get_last_week_challenges():
         Same format as get_week_challenges
     """
     # Calculate last week's start and end dates
-    today = datetime.date.today()
-    this_week_start = today - datetime.timedelta(days=today.weekday())
-    last_week_start = this_week_start - datetime.timedelta(days=7)
-    last_week_end = this_week_start - datetime.timedelta(days=1)
-    
-    return get_week_challenges(last_week_start, last_week_end)
+    _, (last_start, last_end) = get_latest_two_challenges()
+    return get_week_challenges(last_start, last_end)
 
 def get_challenge_id(start_date, end_date, challenge_type):
     """
