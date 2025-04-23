@@ -114,6 +114,10 @@ def display_home_page():
 
     st.markdown("---") # Separator before GenAI advice
 
+    community_page()
+
+    st.markdown("---") # Separator before GenAI advice
+
     # Display GenAI advice as part of the page with anchor
     st.markdown("<div id='motivational-quote'></div>", unsafe_allow_html=True)
     st.header("Today's Motivation")
@@ -231,52 +235,23 @@ def motivate(userId):
     image = result['image']
     display_genai_advice(timestamp, content, image)
 
-# This is the starting point for your app. You do not need to change these lines
-if __name__ == '__main__':
-    # Check if user is authenticated
-    if not st.session_state.authenticated:
-        # Check if account was just created
-        if 'account_created' in st.session_state and st.session_state.account_created:
-            st.success("Account created successfully! Please log in with your new credentials.")
-            # Clear the flag to avoid showing the message again
-            st.session_state.account_created = False
+
+def community_page(): #(user_id):
+    user_id = st.session_state.user_id
         
-        
-        if st.session_state.current_page == 'login':
-            login_page()
-        elif st.session_state.current_page == 'register':
-            register_page()
-    else:
-        # If authenticated, check the current page and display appropriate content
-        if st.session_state.page == 'home':
-            display_home_page()
-            #display_app_page()
-        elif st.session_state.page == 'activity':
-            # Add a "Back to Home" button at the top of the page
-            if st.button("Return to Home"):
-                nav_to_home()
-            # Display activity page content
-            activity_page()
-
-
-# community_page.py
-
-def community_page(user_id):
-    st.title("Community")
-    
     # Get current week's start and end dates
     today = datetime.date.today()
     start_of_week = today - datetime.timedelta(days=today.weekday())
     end_of_week = start_of_week + datetime.timedelta(days=6)
     
     # Display weekly challenges section
-    st.header("Weekly Challenges")
+    st.title("Weekly Challenges")
     
     # Format dates for display
     start_str = start_of_week.strftime("%m/%d/%y")
     end_str = end_of_week.strftime("%m/%d/%y")
     
-    st.subheader(f"New weekly challenges {start_str} - {end_str}")
+    st.subheader(f"New Weekly Challenges {start_str} - {end_str}")
     
     # Get challenge IDs
     distance_challenge_id = get_challenge_id(start_of_week, end_of_week, "Distance")
@@ -344,3 +319,30 @@ def community_page(user_id):
                         st.error("Could not join challenge. Try again.")
                 else:
                     st.error("Challenge not available yet")
+
+# This is the starting point for your app. You do not need to change these lines
+if __name__ == '__main__':
+    # Check if user is authenticated
+    if not st.session_state.authenticated:
+        # Check if account was just created
+        if 'account_created' in st.session_state and st.session_state.account_created:
+            st.success("Account created successfully! Please log in with your new credentials.")
+            # Clear the flag to avoid showing the message again
+            st.session_state.account_created = False
+        
+        
+        if st.session_state.current_page == 'login':
+            login_page()
+        elif st.session_state.current_page == 'register':
+            register_page()
+    else:
+        # If authenticated, check the current page and display appropriate content
+        if st.session_state.page == 'home':
+            display_home_page()
+            #display_app_page()
+        elif st.session_state.page == 'activity':
+            # Add a "Back to Home" button at the top of the page
+            if st.button("Return to Home"):
+                nav_to_home()
+            # Display activity page content
+            activity_page()
