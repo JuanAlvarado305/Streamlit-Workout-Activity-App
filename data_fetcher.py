@@ -509,3 +509,10 @@ def get_current_week_challenges():
     results = list(query_job.result())
 
     return [dict(row) for row in results]
+
+def get_current_leaderboard_data():
+    '''collect 3 weekly challenges
+        top 10 for each
+        user IDs: their usernames, their challenge stats, their profile pic'''
+    client = bigquery.Client(project="roberttechx25")
+    
