@@ -611,3 +611,7 @@ def display_user_sensor_data(sensor_data_list):
                 st.info(f"The {selected_sensor} values showed an increasing trend of approximately {change_pct:.1f}% from start to finish.")
             else:
                 st.info(f"The {selected_sensor} values showed a decreasing trend of approximately {abs(change_pct):.1f}% from start to finish.")
+
+def display_challenge_leaderboard(start_time, end_time, type, results):
+    #results is a list of each users and their metric
+    pass

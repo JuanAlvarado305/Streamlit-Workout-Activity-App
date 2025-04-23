@@ -516,3 +516,9 @@ def get_current_leaderboard_data():
         user IDs: their usernames, their challenge stats, their profile pic'''
     client = bigquery.Client(project="roberttechx25")
     
+def get_last_weeks_leaderboard_data():
+    '''
+    access the 
+    collect top 5 competitors for 
+    '''
+    client = bigquery.Client(project="roberttechx25")
