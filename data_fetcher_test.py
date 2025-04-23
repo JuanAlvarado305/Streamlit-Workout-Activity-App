@@ -366,51 +366,57 @@ class TestAuthFunctions(unittest.TestCase):
         self.assertEqual(result, "That username is already in use.")
 
 class TestGetCurrentWeekChallenges(unittest.TestCase):
+    """Tests for get_current_week_challenges(), mocking out its two dependencies."""
 
-    @patch("data_fetcher.bigquery.Client")
-    def test_get_current_challenges_success(self, mock_client_class):
-        """Returns a list of current challenges with participant counts."""
-        mock_client = MagicMock()
-        mock_query_job = MagicMock()
-        mock_query_job.result.return_value = [
-            {"id": "steps_2025_04_14_uid", "name": "Steps Challenge", "participantCount": 182},
-            {"id": "distance_2025_04_14_uid", "name": "Distance Challenge", "participantCount": 150},
+    @patch("data_fetcher.get_week_challenges")
+    @patch("data_fetcher.get_latest_two_challenges")
+    def test_get_current_challenges_success(self, mock_latest_two, mock_week):
+        # Arrange: pretend that latest two ranges are (this, last)
+        mock_latest_two.return_value = (
+            ("2025-04-14", "2025-04-20"),
+            ("2025-04-07", "2025-04-13"),
+        )
+        # And pretend that get_week_challenges returns some nested payload:
+        expected = [
+            {"user_id": "u1", "username": "alice", "profile_image": None, "value": 100},
+            {"user_id": "u2", "username": "bob",   "profile_image": None, "value":  90},
         ]
-        mock_client.query.return_value = mock_query_job
-        mock_client_class.return_value = mock_client
+        mock_week.return_value = [["2025-04-14", "2025-04-20"], expected]
 
+        # Act
         result = get_current_week_challenges()
-        self.assertEqual(len(result), 2)
-        self.assertEqual(result[0]["id"], "steps_2025_04_14_uid")
-        self.assertEqual(result[0]["participantCount"], 182)
 
-    @patch("data_fetcher.bigquery.Client")
-    def test_get_current_challenges_empty_result(self, mock_client_class):
-        """Returns empty list if no challenges are active."""
-        mock_client = MagicMock()
-        mock_query_job = MagicMock()
-        mock_query_job.result.return_value = []
+        # Assert: we got exactly the second element of the mocked get_week_challenges
+        self.assertEqual(result, [["2025-04-14", "2025-04-20"], expected])
+        mock_latest_two.assert_called_once()
+        mock_week.assert_called_once_with("2025-04-14", "2025-04-20")
 
-        mock_client.query.return_value = mock_query_job
-        mock_client_class.return_value = mock_client
+    @patch("data_fetcher.get_week_challenges")
+    @patch("data_fetcher.get_latest_two_challenges")
+    def test_get_current_challenges_empty(self, mock_latest_two, mock_week):
+        # Arrange: normal dates
+        mock_latest_two.return_value = (("2025-04-14", "2025-04-20"), ("2025-04-07", "2025-04-13"))
+        # But the week query returns an empty list
+        mock_week.return_value = []
 
+        # Act
         result = get_current_week_challenges()
+
+        # Assert: we simply bubble up the empty list
         self.assertEqual(result, [])
+        mock_week.assert_called_once()
 
-    @patch("data_fetcher.bigquery.Client")
-    def test_get_current_challenges_with_error(self, mock_client_class):
-        """Returns empty list if BigQuery throws an exception."""
-        mock_client = MagicMock()
-        mock_client.query.side_effect = Exception("BigQuery error")
+    @patch("data_fetcher.get_week_challenges")
+    @patch("data_fetcher.get_latest_two_challenges")
+    def test_get_current_challenges_failure(self, mock_latest_two, mock_week):
+        # Arrange: let get_week_challenges throw
+        mock_latest_two.return_value = (("2025-04-14", "2025-04-20"), ("2025-04-07", "2025-04-13"))
+        mock_week.side_effect = Exception("DB is down")
 
-        mock_client_class.return_value = mock_client
-
-        try:
-            result = get_current_week_challenges()
-        except Exception as e:
-            result = []
-
-        self.assertEqual(result, [])
+        # Act / Assert: the exception bubbles up (or you can wrap in try/except
+        with self.assertRaises(Exception):
+            _ = get_current_week_challenges()
+        mock_week.assert_called_once()
 
 if __name__ == "__main__":
     unittest.main()
