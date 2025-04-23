@@ -10,7 +10,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 import datetime
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data, challenge_page, display_challenge
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges
 from pages.Activity_Page import activity_page # Import function instead of module
 from pages.hidden.login import login_page  # Import the login page function
 from pages.hidden.register import register_page
@@ -115,6 +115,7 @@ def display_home_page():
     st.markdown("---") # Separator before GenAI advice
 
     challenge_components()
+    challenge_page(userId)
 
     st.markdown("---") # Separator before GenAI advice
 

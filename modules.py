@@ -8,10 +8,10 @@
 #############################################################################
 
 import streamlit as st
-from data_fetcher import get_user_profile, get_current_week_challenges, get_week_challenges, get_last_week_challenges, get_challenge_id, get_joined_challenge, join_challenge
+from data_fetcher import get_user_profile, get_current_week_challenges, get_week_challenges, get_last_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges
 from html import escape
 from internals import create_component
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 from google.cloud import bigquery
 import uuid
@@ -616,27 +616,37 @@ def display_user_sensor_data(sensor_data_list):
 
 def display_challenge(date_range, challenge_type, participant_data):
     """Display a challenge leaderboard with participant rankings"""
-    start_date, end_date = date_range[0], date_range[1]
-    
-    st.subheader(f"{start_date.strftime('%m/%d/%y')}-{end_date.strftime('%m/%d/%y')} {challenge_type} Challenge")
-    
-    # Format dates as display strings
-    start_str = start_date.strftime("%m/%d/%y")
-    end_str = end_date.strftime("%m/%d/%y")
-    
-    # Calculate number of rows needed
+    # date_range from get_week_challenges comes back as ISO‐strings or date objects
+    raw_start, raw_end = date_range
+
+    # parse back to date if needed
+    if isinstance(raw_start, str):
+        start_date = datetime.strptime(raw_start, "%Y-%m-%d").date()
+    else:
+        start_date = raw_start
+
+    if isinstance(raw_end, str):
+        end_date = datetime.strptime(raw_end, "%Y-%m-%d").date()
+    else:
+        end_date = raw_end
+
+    # Header with formatted dates
+    st.subheader(
+        f"{start_date.strftime('%m/%d/%y')}-"
+        f"{end_date.strftime('%m/%d/%y')} {challenge_type} Challenge"
+    )
+
+    # If no participants, bail out
     rows = min(len(participant_data), 10)
     if rows == 0:
         st.write("No participants yet!")
         return
-    
-    # Create the leaderboard table
+
+    # Build the leaderboard
     for i in range(rows):
         participant = participant_data[i]
-        
-        # Create a row with columns: rank, user info, value
         cols = st.columns([1, 3, 1])
-        
+
         # Rank column with medal for top 3
         with cols[0]:
             rank = participant.get("rank", i+1)
@@ -648,22 +658,20 @@ def display_challenge(date_range, challenge_type, participant_data):
                 st.write("🥉 3rd")
             else:
                 st.write(f"{rank}th")
-        
+
         # User info column
         with cols[1]:
             username = participant.get("username", "User")
             profile_image = participant.get("profile_image")
-            
-            # Create a horizontal layout for profile pic and username
             if profile_image:
-                user_cols = st.columns([1, 4])
-                with user_cols[0]:
+                pic_col, name_col = st.columns([1, 4])
+                with pic_col:
                     st.image(profile_image, width=30)
-                with user_cols[1]:
+                with name_col:
                     st.write(username)
             else:
                 st.write(username)
-        
+
         # Value column
         with cols[2]:
             st.write(participant.get("value", "0"))
@@ -672,9 +680,10 @@ def challenge_page(user_id):
     st.title("Weekly Fitness Challenges")
     
     # Get current week's challenges
-    today = datetime.date.today()
-    start_of_week = today - datetime.timedelta(days=today.weekday())
-    end_of_week = start_of_week + datetime.timedelta(days=6)
+    # (If you ever need to compute “this week” locally, do it like this:)
+    today         = datetime.today().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week   = start_of_week + timedelta(days=6)
     
     current_challenges = get_current_week_challenges() #get_current_leaderboard_data()
     date_range = current_challenges[0]
@@ -698,7 +707,7 @@ def challenge_page(user_id):
     # Display last week's winners
     st.header("Last Week's Winners")
     
-    last_week_data = get_last_week_challenges #get_last_weeks_leaderboard_data()
+    last_week_data = get_last_week_challenges() #get_last_weeks_leaderboard_data()
     last_week_range = last_week_data[0]
     last_week_leaderboards = last_week_data[1]
     
