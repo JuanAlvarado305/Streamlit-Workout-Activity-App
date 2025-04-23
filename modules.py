@@ -674,11 +674,19 @@ def display_challenge(date_range, challenge_type, participant_data):
 
         # Value column
         with cols[2]:
-            st.write(participant.get("value", "0"))
+            val = participant.get("value", 0)
 
-def challenge_page(user_id):
-    #st.title("Weekly Fitness Challenges")
-    
+            if challenge_type == "Distance":
+                st.write(f"{val:.1f} mi")
+            elif challenge_type == "Steps":
+                st.write(f"{int(val):,} steps")
+            elif challenge_type == "Workouts":
+                if val == 1:
+                    st.write(f"{int(val)} workout")
+                else:
+                    st.write(f"{int(val)} workouts")
+
+def challenge_page(user_id):    
     # Get current week's challenges
     # (If you ever need to compute “this week” locally, do it like this:)
     today         = datetime.today().date()
@@ -718,7 +726,7 @@ def challenge_page(user_id):
     steps_winner = last_week_leaderboards[1][0]["username"] if last_week_leaderboards[1] else "N/A"
     workouts_winner = last_week_leaderboards[2][0]["username"] if last_week_leaderboards[2] else "N/A"
     
-    st.write(f"Thank you all for competing! Congratulations {distance_winner}, {steps_winner}, and {workouts_winner}!")
+    st.write(f"Thank you all for competing! Congratulations :blue[{distance_winner}], :blue[{steps_winner}], and :blue[{workouts_winner}]!")
     
     # Use columns for the three leaderboards
     cols = st.columns(3)
@@ -737,7 +745,7 @@ def challenge_page(user_id):
             for i, participant in enumerate(last_week_leaderboards[1][:5]):
                 rank = i + 1
                 medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
-                st.write(f"{medal} {participant['username']}: {participant['value']}")
+                st.write(f"{medal} {participant['username']}: {int(participant['value'])}")
     
     with cols[2]:
         st.subheader("Workouts Challenge")
@@ -745,4 +753,4 @@ def challenge_page(user_id):
             for i, participant in enumerate(last_week_leaderboards[2][:5]):
                 rank = i + 1
                 medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else ""
-                st.write(f"{medal} {participant['username']}: {participant['value']}")
+                st.write(f"{medal} {participant['username']}: {int(participant['value'])}")
