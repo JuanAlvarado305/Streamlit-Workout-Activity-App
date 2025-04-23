@@ -116,6 +116,7 @@ def display_home_page():
     st.markdown("---") # Separator before GenAI advice
 
     challenge_components()
+    st.markdown('###')
     challenge_page(userId)
 
     st.markdown("---") # Separator before GenAI advice
@@ -245,15 +246,14 @@ def challenge_components():
     today = datetime.date.today()
     start_of_week = today - datetime.timedelta(days=today.weekday())
     end_of_week = start_of_week + datetime.timedelta(days=6)
-    
-    # Display weekly challenges section
-    st.title("Weekly Challenges")
+
+    st.title("Weekly Fitness Challenges")
     
     # Format dates for display
     start_str = start_of_week.strftime("%m/%d/%y")
     end_str = end_of_week.strftime("%m/%d/%y")
     
-    st.subheader(f"New Weekly Challenges {start_str} - {end_str}")
+    st.header(f"New Weekly Challenges {start_str} - {end_str}")
     
     distance_challenge_id = get_challenge_id(start_of_week, end_of_week, "Distance")
     steps_challenge_id = get_challenge_id(start_of_week, end_of_week, "Steps")

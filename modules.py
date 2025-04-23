@@ -677,7 +677,7 @@ def display_challenge(date_range, challenge_type, participant_data):
             st.write(participant.get("value", "0"))
 
 def challenge_page(user_id):
-    st.title("Weekly Fitness Challenges")
+    #st.title("Weekly Fitness Challenges")
     
     # Get current week's challenges
     # (If you ever need to compute “this week” locally, do it like this:)
@@ -703,6 +703,8 @@ def challenge_page(user_id):
     
     with tabs[2]:
         display_challenge(date_range, "Workouts", leaderboards[2])
+    
+    st.markdown('###')
     
     # Display last week's winners
     st.header("Last Week's Winners")
