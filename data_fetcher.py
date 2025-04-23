@@ -568,6 +568,7 @@ def get_week_challenges(start_date, end_date):
         elif challenge_type.lower() == "workouts":
             challenge_data[2] = participants
     
+    #print(challenge_data)
     return [[start_date, end_date], challenge_data]
 
 def get_current_week_challenges():
