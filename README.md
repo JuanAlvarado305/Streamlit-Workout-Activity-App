@@ -2,9 +2,9 @@
 
 ## Our Team
 
-Jonael J Garcia Rivera
-Loie White
-Juan Alvarado
+Jonael J Garcia Rivera,
+Loie White,
+Juan Alvarado,
 Foluso Onatemowo
 
 ## How to run the streamlit app
