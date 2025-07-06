@@ -1,7 +1,12 @@
-streamlit
-google-cloud-bigquery
+# requirements.txt
+
+streamlit 
 pandas
 plotly
-vertexai
 streamlit-lottie
-requests
+python-dotenv
+
+# Pinned Google Cloud library versions for stability
+google-cloud-bigquery
+google-cloud-aiplatform
+google-auth
