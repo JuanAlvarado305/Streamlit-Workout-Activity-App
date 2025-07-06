@@ -5,6 +5,7 @@
 #
 #############################################################################
 
+
 import streamlit as st
 # Set page to wide mode - add this at the very beginning, before any other st commands
 st.set_page_config(layout="wide")
@@ -333,28 +334,46 @@ def challenge_components():
                     st.error("Challenge not available yet")
 
 # This is the starting point for your app. You do not need to change these lines
+# Community_Page.py
+
+# (All the code at the top of the file remains the same)
+
+# This is the starting point for your app. You do not need to change these lines
+# Community_Page.py
+
+# (All the code at the top of the file remains the same)
+
 if __name__ == '__main__':
-    # Check if user is authenticated
-    if not st.session_state.authenticated:
-        # Check if account was just created
-        if 'account_created' in st.session_state and st.session_state.account_created:
-            st.success("Account created successfully! Please log in with your new credentials.")
-            # Clear the flag to avoid showing the message again
-            st.session_state.account_created = False
-        
-        
+    # --- Session State Initialization ---
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+        st.session_state.user_id = None
+        st.session_state.page = "home"
+        st.session_state.current_page = "login"
+
+    # --- New: Handle Password Reset Link ---
+    # This checks for a reset link BEFORE checking if the user is logged in.
+    if "token" in st.query_params:
+        from pages.hidden.reset_password import reset_password_page
+        reset_password_page()
+
+    # --- Existing Login/Authentication Logic ---
+    elif not st.session_state.authenticated:
+        from pages.hidden.forgot_password import forgot_password_page
+        from pages.hidden.login import login_page
+        from pages.hidden.register import register_page
+
         if st.session_state.current_page == 'login':
             login_page()
         elif st.session_state.current_page == 'register':
             register_page()
+        elif st.session_state.current_page == 'forgot_password':
+            forgot_password_page()
+            
     else:
-        # If authenticated, check the current page and display appropriate content
         if st.session_state.page == 'home':
             display_home_page()
-            #display_app_page()
         elif st.session_state.page == 'activity':
-            # Add a "Back to Home" button at the top of the page
             if st.button("Return to Home"):
                 nav_to_home()
-            # Display activity page content
             activity_page()

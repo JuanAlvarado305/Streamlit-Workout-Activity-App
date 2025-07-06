@@ -686,14 +686,24 @@ def display_challenge(date_range, challenge_type, participant_data):
                 else:
                     st.write(f"{int(val)} workouts")
 
+# modules.py
+
 def challenge_page(user_id):    
-    # Get current week's challenges
-    # (If you ever need to compute “this week” locally, do it like this:)
-    today         = datetime.today().date()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week   = start_of_week + timedelta(days=6)
+    current_challenges = get_current_week_challenges()
     
-    current_challenges = get_current_week_challenges() #get_current_leaderboard_data()
+    # --- FIX STARTS HERE ---
+    # Add a check to handle cases where no challenges are found.
+    # This is common with a new, empty database.
+    if not current_challenges or not current_challenges[0]:
+        st.header("Ongoing Challenges")
+        st.info("No weekly challenges are active right now. Check back later!")
+        
+        # Also handle the "Last Week's Winners" section gracefully
+        st.header("Last Week's Winners")
+        st.info("No data from last week's challenges.")
+        return # Exit the function early to prevent the error
+    # --- FIX ENDS HERE ---
+    
     date_range = current_challenges[0]
     leaderboards = current_challenges[1]
     
@@ -717,8 +727,13 @@ def challenge_page(user_id):
     # Display last week's winners
     st.header("Last Week's Winners")
     
-    last_week_data = get_last_week_challenges() #get_last_weeks_leaderboard_data()
-    last_week_range = last_week_data[0]
+    last_week_data = get_last_week_challenges()
+    
+    # Add a similar check for last week's data
+    if not last_week_data or not last_week_data[0]:
+        st.info("No data from last week's challenges.")
+        return
+
     last_week_leaderboards = last_week_data[1]
     
     # Show winners message
