@@ -799,40 +799,48 @@ from google.oauth2 import service_account
 # ... other imports
 
 # --- New, More Robust Helper Function ---
+# def _get_bigquery_client():
+#     """
+#     Creates a BigQuery client, with enhanced debugging to find startup errors.
+#     """
+#     print("--- [DEBUG] Attempting to get BigQuery client. ---")
+
+#     # This check is for local development
+#     if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+#         print("--- [DEBUG] Found local environment variable. Using default credentials. ---")
+#         return bigquery.Client()
+
+#     # This check is for deployment on Streamlit Cloud
+#     elif "gcp_service_account" in st.secrets:
+#         print("--- [DEBUG] Found 'gcp_service_account' in secrets. Processing... ---")
+#         try:
+#             creds_info = st.secrets["gcp_service_account"]
+#             print("--- [DEBUG] Successfully read secrets dictionary from st.secrets. ---")
+
+#             credentials = service_account.Credentials.from_service_account_info(creds_info)
+#             print("--- [DEBUG] Successfully created credentials object from secrets info. ---")
+
+#             client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+#             print("--- [DEBUG] Successfully created BigQuery client for cloud environment. ---")
+#             return client
+#         except Exception as e:
+#             # This will force the full error traceback to be printed to the logs
+#             print(f"!!! [DEBUG] AN ERROR OCCURRED while processing cloud secrets: {e}")
+#             traceback.print_exc()
+#             raise e
+
+#     # This runs if no credentials are found at all
+#     else:
+#         print("!!! [DEBUG] No credentials found in environment variables or Streamlit secrets.")
+#         raise Exception("Google Cloud credentials not found.")
+
 def _get_bigquery_client():
     """
-    Creates a BigQuery client, with enhanced debugging to find startup errors.
+    Creates and returns a BigQuery client.
+    - On Google Cloud, it automatically uses the environment's service account permissions.
+    - Locally, it automatically uses the GOOGLE_APPLICATION_CREDENTIALS from your .env file.
     """
-    print("--- [DEBUG] Attempting to get BigQuery client. ---")
-
-    # This check is for local development
-    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        print("--- [DEBUG] Found local environment variable. Using default credentials. ---")
-        return bigquery.Client()
-
-    # This check is for deployment on Streamlit Cloud
-    elif "gcp_service_account" in st.secrets:
-        print("--- [DEBUG] Found 'gcp_service_account' in secrets. Processing... ---")
-        try:
-            creds_info = st.secrets["gcp_service_account"]
-            print("--- [DEBUG] Successfully read secrets dictionary from st.secrets. ---")
-
-            credentials = service_account.Credentials.from_service_account_info(creds_info)
-            print("--- [DEBUG] Successfully created credentials object from secrets info. ---")
-
-            client = bigquery.Client(credentials=credentials, project=credentials.project_id)
-            print("--- [DEBUG] Successfully created BigQuery client for cloud environment. ---")
-            return client
-        except Exception as e:
-            # This will force the full error traceback to be printed to the logs
-            print(f"!!! [DEBUG] AN ERROR OCCURRED while processing cloud secrets: {e}")
-            traceback.print_exc()
-            raise e
-
-    # This runs if no credentials are found at all
-    else:
-        print("!!! [DEBUG] No credentials found in environment variables or Streamlit secrets.")
-        raise Exception("Google Cloud credentials not found.")
+    return bigquery.Client()
 
 def get_user_sensor_data(user_id, workout_id):
     """
