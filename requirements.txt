@@ -1,6 +1,6 @@
 # requirements.txt
 
-streamlit
+streamlit 
 pandas
 plotly
 streamlit-lottie
