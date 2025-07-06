@@ -1,12 +1,12 @@
 # requirements.txt
 
-streamlit==1.46.1
-pandas==2.2.2
-plotly==5.22.0
-streamlit-lottie==0.0.5
-python-dotenv==1.0.1
+streamlit
+pandas
+plotly
+streamlit-lottie
+python-dotenv
 
 # Pinned Google Cloud library versions for stability
-google-cloud-bigquery==3.25.0
-google-cloud-aiplatform==1.56.0
-google-auth==2.30.0
+google-cloud-bigquery
+google-cloud-aiplatform
+google-auth
