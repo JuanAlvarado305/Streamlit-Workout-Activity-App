@@ -4,7 +4,7 @@ streamlit
 google-cloud-bigquery
 pandas
 plotly
-vertexai
+google-cloud-aiplatform
 streamlit-lottie
 requests
 python-dotenv
