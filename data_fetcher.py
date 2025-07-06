@@ -801,25 +801,39 @@ from google.oauth2 import service_account
 def _get_bigquery_client():
     """
     Creates a BigQuery client by detecting the environment (local vs. deployed)
-    and using the appropriate credentials.
+    and using the appropriate credentials. Includes debug print statements.
     """
-    # First, check for the local environment variable from the .env file
+    print("--- Attempting to get BigQuery client. ---")
+
+    # This check is for local development
     if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        # This is the local development path
-        return bigquery.Client()
+        print("Found GOOGLE_APPLICATION_CREDENTIALS. Using local default credentials.")
+        client = bigquery.Client()
+        print("--- Successfully created client for LOCAL environment. ---")
+        return client
 
-    # If the environment variable is not found, assume deployment on Streamlit Cloud
+    # This check is for deployment on Streamlit Cloud
     elif "gcp_service_account" in st.secrets:
-        # This is the deployed path
-        creds_info = st.secrets["gcp_service_account"]
-        credentials = service_account.Credentials.from_service_account_info(creds_info)
-        return bigquery.Client(credentials=credentials, project=credentials.project_id)
-
-    # If neither method works, raise an error
+        print("Found 'gcp_service_account' in st.secrets. Attempting to use cloud credentials.")
+        try:
+            creds_info = st.secrets["gcp_service_account"]
+            print("Successfully read secrets dictionary.")
+            
+            credentials = service_account.Credentials.from_service_account_info(creds_info)
+            print("Successfully created credentials object from secrets.")
+            
+            client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+            print("--- Successfully created client for CLOUD environment. ---")
+            return client
+        except Exception as e:
+            # Print the exact error if credential processing fails
+            print(f"!!! AN ERROR OCCURRED while processing cloud secrets: {e}")
+            raise e
+    
+    # This runs if no credentials are found
     else:
+        print("!!! No credentials found in environment variables or Streamlit secrets.")
         raise Exception("Google Cloud credentials not found. Please set up your .env file or Streamlit secrets.")
-
-# --- All functions below are refactored to use the helper function ---
 
 def get_user_sensor_data(user_id, workout_id):
     """
