@@ -1,161 +1,148 @@
-# Spaghetti Crew
+# Spaghetti Crew Workout App
 
-## Our Team
+A full-featured, cloud-native social fitness application built with Python. This app allows users to register, track their workouts, participate in weekly challenges, and engage with a community of friends. The entire backend is powered by Google Cloud, and the application is deployed as a containerized service on Google Cloud Run.
 
-Jonael J Garcia Rivera,
-Loie White,
-Juan Alvarado,
-Foluso Onatemowo
 
-## How to run the streamlit app
+---
 
-### Running the Streamlit app for development
+## Features
 
-Make sure you have installed the correct packages.
+This application includes a complete set of features for a modern social fitness platform:
 
-```shell
-$ pip install -r requirements.txt
+* **Secure User Authentication:** Full user registration and login system with hashed passwords.
+* **Password Reset Functionality:** A complete, multi-step password reset flow using secure, expiring tokens.
+* **Personalized Activity Dashboard:** A central hub for users to view their workout history, aggregated stats (total distance, steps, calories), and detailed sensor data from their activities.
+* **Social Community Feed:** Users can view a live feed of posts from their friends, creating an engaging community experience.
+* **Weekly Fitness Challenges:** A dynamic challenge system where users can join weekly competitions based on distance, steps, or total workouts. Leaderboards display current rankings and celebrate last week's winners.
+* **AI-Powered Motivation:** Integrates with Google's Vertex AI (Gemini) to provide users with personalized motivational quotes based on their daily workout performance.
+
+---
+
+## Tech Stack & Architecture
+
+This project is built on a modern, scalable, and serverless architecture, leveraging the power of Google Cloud Platform.
+
+* **Frontend:** **Streamlit** - A pure Python framework used to build the entire interactive user interface.
+* **Database:** **Google Cloud BigQuery** - A serverless data warehouse used as the primary database for storing all user data, workouts, posts, and challenge information.
+* **Hosting:** **Google Cloud Run** - A fully managed serverless platform that runs the containerized Streamlit application. It automatically scales with traffic and scales down to zero, making it highly cost-effective.
+* **Containerization:** **Docker** - The application is packaged into a container using a `Dockerfile`, ensuring consistency between local development and cloud deployment.
+* **Authentication & Deployment:** **Google Cloud SDK (`gcloud`)** - Used for command-line interaction with Google Cloud, including deploying the application to Cloud Run.
+
+#### **How It Works**
+
+```mermaid
+graph TD
+    A[User's Browser] -->|HTTPS Request| B(Google Cloud Run);
+    B -->|Runs Streamlit App| C(Containerized App);
+    C -->|BigQuery Python Client| D(Google BigQuery Database);
+    C -->|Vertex AI Client| E(Gemini AI Model);
+    D -->|Returns Data| C;
+    E -->|Returns Advice| C;
+    C -->|Renders HTML/CSS| B;
+    B -->|Sends Page to User| A;
+
+    subgraph "Your Python Code"
+        C
+    end
+
+    subgraph "Google Cloud Project"
+        B
+        D
+        E
+    end
 ```
 
-Change into this directory. You can check that you're in the correct directory by running `ls`. 
-You should see the correct files printed out.
+---
 
-```shell
-$ ls
-Community_Page.py   data_fetcher.py        Dockerfile     LICENSE   modules.py        pages        __pycache__   requirements.txt  'Team Agreement.pdf'   venv
-custom_components   data_fetcher_test.py   internals.py   mockups   modules_test.py   prototypes   README.md     run-streamlit.sh   usuability_tests
+## Local Development Setup
+
+Follow these steps to run the application on your local machine.
+
+#### 1. Prerequisites
+
+* Python 3.11
+* [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and authenticated (`gcloud auth login`).
+* A Google Cloud project with the **BigQuery API**, **Cloud Run API**, and **Cloud Build API** enabled.
+
+#### 2. Clone the Repository
+
+```bash
+git clone [https://github.com/JuanAlvarado305/Streamlit-Workout-Activity-App.git](https://github.com/JuanAlvarado305/Streamlit-Workout-Activity-App.git)
+cd Streamlit-Workout-Activity-App
 ```
 
-Run the following command to run the app locally. Note that if you make changes, you just
-need to refresh the server and the new changes should appear (you do not need to rerun
-the following command while you are actively making changes).
+#### 3. Set Up Virtual Environment
 
-```shell
-$ streamlit run Community_Page.py
+Create and activate a virtual environment to manage dependencies.
+
+```bash
+# Create the environment
+python -m venv env
+
+# Activate it (Windows)
+.\env\Scripts\activate
+
+# Activate it (macOS/Linux)
+source env/bin/activate
 ```
 
-### Using Docker to run the Streamlit app
+#### 4. Install Dependencies
 
-Docker simply creates a virtual environment for only your app. This is what we will use to
-deploy our app continuously.
-
-Fortunately, we already have a script that builds and starts Docker for us. Run the 
-following command to build the container and start the server locally.
-
-```shell
-$ ./run-streamlit.sh
+```bash
+pip install -r requirements.txt
 ```
 
-## Setting up GitHub Actions for CI/CD
+#### 5. Configure Local Credentials
 
-The GitHub Actions are already mostly configured for you. They are split
-into two files:
+* Create a service account in your Google Cloud project and grant it the **`BigQuery User`** and **`BigQuery Data Editor`** roles.
+* Download the JSON key file for this service account.
+* In the root of the project, create a file named `.env`.
+* Add the following line to the `.env` file, replacing the path with the actual path to your downloaded key file:
+    ```
+    GOOGLE_APPLICATION_CREDENTIALS="C:/path/to/your/keyfile.json"
+    ```
+* **Important:** Ensure the `.env` file is listed in your `.gitignore` file to prevent committing your secret key.
 
-* `.github/workflows/cloud-run.yml`: workflow for automatic deployment
-* `.github/workflows/python-checks.yml`: workflow for continuous integration (testing)
+#### 6. Run the App
 
-You won't need to modify `python-checks` at all, but you will need to change
-the environment variables in `cloud-run.yml` to work for your team's GCP project.
-
-### Deploy manually on the command-line
-
-First, deploy your project manually from the command line.
-
-1. Set up your Google Cloud Project by following the "Before you begin" section of 
-http://cloud/run/docs/quickstarts/build-and-deploy/deploy-python-service?hl=en.
-
-2. Build the image using the following command, replacing the project ID and service 
-name with your info. Your service name is the name of your webapp or project and can 
-be whatever you want!
-
-```shell
-PROJECT_ID=your-cloud-project-name
-SERVICE_NAME=your-team-service-name
-gcloud builds submit --tag gcr.io/${PROJECT_ID}/${SERVICE_NAME}
+```bash
+streamlit run app.py
 ```
 
-3. Deploy the image that you just built. If successful, you should see a URL in the
-output on the command-line. Follow the link and you should see your app!
+The application will open in your web browser at `http://localhost:8501`.
 
-```shell
-gcloud run deploy ${SERVICE_NAME} \
-    --image gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest \
-    --region us-central1 \
-    --allow-unauthenticated
+---
+
+## Deployment to Google Cloud Run
+
+This application is designed to be deployed as a container on Google Cloud Run.
+
+1.  **Grant Permissions:** In the Google Cloud IAM console, grant the **`BigQuery User`** and **`BigQuery Data Editor`** roles to the **Compute Engine default service account** (`your-project-number-compute@developer.gserviceaccount.com`). This allows Cloud Run to securely access the database without needing a key file.
+2.  **Deploy:** From your local terminal, run the following `gcloud` command from the project's root directory:
+    ```bash
+    gcloud run deploy streamlit-workout-app --source . --allow-unauthenticated
+    ```
+    * You will be prompted to select a region. Choose one close to you (e.g., `us-central1`).
+    * The command will build the container using the `Dockerfile`, push it to Google's Artifact Registry, and deploy it to Cloud Run.
+    * Upon completion, it will provide a public URL where your app is live.
+
+---
+
+## Project Structure
+
 ```
+.
+├── .streamlit/
+│   └── config.toml      # App theme and configuration
+├── custom_components/   # HTML templates for custom components
+├── pages/
+│   ├── Activity_Page.py # Code for the detailed activity view
+│   └── hidden/          # Pages for auth flow (login, register, etc.)
+├── .env                 # (Local Only) Stores path to GCP credentials
+├── .gitignore           # Specifies files to ignore for Git
+├── app.py               # Main application entry point
+├── data_fetcher.py      # All functions for interacting with BigQuery
+├── Dockerfile           # Instructions for building the app container
+├── modules.py           # UI components and display logic
+└── requirements.txt     # List of Python dependencies
 
-### Set up automatic deployment in GitHub Actions
-
-After a successful deployment, we can modify the `./github/workflows/cloud-run.yml`
-file. Additional information on each step is in the [documentation](https://github.com/google-github-actions/auth?tab=readme-ov-file#workload-identity-federation-through-a-service-account)
- but you should be able to follow the steps below.
-
-1. Create a Workload Identity Pool and a Provider for GitHub. Replace `GITHUB_ORG` with the name of the GitHub org for your class. This should be before your repository name in the URL for your GitHub repository.
-
-```shell
-gcloud iam workload-identity-pools create "github" \
-    --project="${PROJECT_ID}" \
-    --location="global" \
-    --display-name="GitHub Actions Pool"
-
-OIDC_NAME=project-repo
-GITHUB_ORG=your-course-github-org
-
-gcloud iam workload-identity-pools providers create-oidc "${OIDC_NAME}" \
-    --project="${PROJECT_ID}" \
-    --location="global" \
-    --workload-identity-pool="github" \
-    --display-name="My GitHub repo Provider" \
-    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-    --attribute-condition="assertion.repository_owner == '${GITHUB_ORG}'" \
-    --issuer-uri="https://token.actions.githubusercontent.com"
-```
-
-3. Get the full path name for the Workload Identity Provider from gcloud.
-You will use the output from this command as the `WORKLOAD_IDENTITY_PROVIDER` 
-field in `.github/workflows/cloud-run.yml`.
-
-```shell
-gcloud iam workload-identity-pools providers describe "${OIDC_NAME}" \
-    --project="${PROJECT_ID}" \
-    --location="global" \
-    --workload-identity-pool="github" \
-    --format="value(name)"
-```
-
-4. Authorize your service account. Use the output from the first command as the
-`WORKLOAD_IDENTITY_POOL_ID` in the second command, and your team's GitHub repo
-name as the `GITHUB_REPO_NAME`. Also replace `GITHUB_ORG` with the name of the GitHub org, same as in step 1.
-
-```shell
-gcloud iam workload-identity-pools describe "github" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --format="value(name)"
-
-WORKLOAD_IDENTITY_POOL_ID=paste-output-from-prev-command
-```
-
-```shell
-PROJECT_NUMBER=yourcloudprojectnumber
-TEAM_NAME=your-github-team-name
-GITHUB_REPO_NAME=your-github-team-repo-name
-
-gcloud iam service-accounts add-iam-policy-binding "${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
-  --project="${PROJECT_ID}" \
-  --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${GITHUB_ORG}/${TEAM_NAME}/${GITHUB_REPO_NAME}"
-```
-
-4. In IAM in the Cloud Console, double check that the following roles are attached 
-to the service account.
-
-    - Cloud Build Service Agent
-    - Cloud Run Admin
-    - Service Account User
-    - Workload Identity User
-
-5. Update the environmental variables (all of the TODOs) in 
-`.github/workflows/cloud-run.yml`, commit and push your changes, 
-and click on "Actions" in your team's repository on GitHub to see
-the workflow running!
