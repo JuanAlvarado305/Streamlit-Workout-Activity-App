@@ -6,6 +6,16 @@ def forgot_password_page():
     """
     Displays the page for the user to enter their email and get a reset link.
     """
+    # --- HIDE THE SIDEBAR ---
+    st.markdown("""
+        <style>
+            section[data-testid="stSidebar"] {
+                display: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    # -------------------------
+
     st.title("Reset Your Password")
 
     if st.button("← Back to Login"):
