@@ -83,11 +83,11 @@ def display_home_page():
         st.markdown("---")
 
         # Team Members Section
-        st.subheader("Secert Santa Crew")
-        st.markdown("Capitan Kirk")
-        st.markdown("Data")
-        st.markdown("Spock")
-        st.markdown("Q")
+        st.subheader("Spaghetti Crew")
+        st.markdown("Juan Alvarado")
+        st.markdown("Loie White")
+        st.markdown("Jonael Rivera")
+        st.markdown("Foluso")
         st.markdown("---")
 
     # --- Main Page Content ---
