@@ -11,6 +11,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all your application files into the container
 COPY . .
 
+# Production settings: code never changes inside the container, so skip the
+# file watcher and rerun-on-save that .streamlit/config.toml enables for development.
+ENV STREAMLIT_SERVER_FILE_WATCHER_TYPE=none \
+    STREAMLIT_SERVER_RUN_ON_SAVE=false \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
 # Expose the port that Cloud Run will use (defaults to 8080)
 EXPOSE 8080
 
