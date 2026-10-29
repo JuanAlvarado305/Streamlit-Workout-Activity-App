@@ -1,6 +1,5 @@
 import streamlit as st
 from data_fetcher import register_user
-import time
 import re
 
 def register_page():
@@ -111,9 +110,8 @@ def register_page():
                     result = register_user(username, full_name, password, email)
                     
                     if result == "¡Successfully registered!":
-                        st.success("Account created successfully! You can now log in.")
+                        # The login page shows the success message via account_created
                         st.session_state.account_created = True
-                        time.sleep(2)
                         st.session_state.current_page = 'login'
                         st.rerun()
                     else:

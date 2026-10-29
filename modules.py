@@ -8,7 +8,7 @@
 #############################################################################
 
 import streamlit as st
-from data_fetcher import get_user_profile, get_current_week_challenges, get_week_challenges, get_last_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges
+from data_fetcher import _get_bigquery_client, get_user_posts, get_friends_posts, get_user_profile, get_current_week_challenges, get_week_challenges, get_last_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges
 from html import escape
 from internals import create_component
 from datetime import datetime, timedelta
@@ -32,10 +32,14 @@ def display_post(post, get_user_data=get_user_profile):
     """Displays a user post with an improved layout in Streamlit.
     This function was created with the help of ChatGPT and Gemini.
     """
-    # Get User Data
-    userData = get_user_data(post['AuthorId'])
-    username = userData['username']
-    user_image = userData['profile_image']
+    # Get User Data (feed queries include the author's details; otherwise look them up)
+    if 'AuthorUsername' in post:
+        username = post['AuthorUsername']
+        user_image = post['AuthorImage']
+    else:
+        userData = get_user_data(post['AuthorId'])
+        username = userData['username']
+        user_image = userData['profile_image']
     timestamp = post['Timestamp']
     content = post['Content']
     post_image = post['ImageUrl']
@@ -277,7 +281,7 @@ def display_post_preview(content, image_url=None):
 
 def check_duplicate_post(user_id, content):
     """Checks if a very similar post was recently made by this user."""
-    client = bigquery.Client(project='roberttechx25')
+    client = _get_bigquery_client()
     query = """
         SELECT COUNT(*) as count
         FROM `roberttechx25.ISE.Posts` 
@@ -306,7 +310,7 @@ def insert_post(user_id, content, image_url=None):
     """Inserts a new post into the database.
     Returns (success, message) tuple.
     """
-    client = bigquery.Client(project='roberttechx25')
+    client = _get_bigquery_client()
     post_id = f"post_{uuid.uuid4().hex[:8]}"
     query = """
         INSERT INTO `roberttechx25.ISE.Posts` (PostId, AuthorId, Timestamp, ImageUrl, Content)
@@ -323,6 +327,9 @@ def insert_post(user_id, content, image_url=None):
     try:
         query_job = client.query(query, job_config=query_config)
         query_job.result()  # Wait for query to complete
+        # Drop cached feeds so the new post shows up immediately
+        get_user_posts.clear()
+        get_friends_posts.clear()
         return True, "Post shared successfully!"
     except Exception as e:
         error_msg = f"Error inserting post: {e}"

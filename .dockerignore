@@ -1,0 +1,26 @@
+# Keep the image small: only the app code and its assets are needed at runtime.
+.git
+.github
+.gitignore
+.dockerignore
+Dockerfile
+run-streamlit.sh
+
+# Design docs, mockups and studies
+*.pdf
+mockups/
+prototypes/
+usuability_tests/
+
+# Tests
+*_test.py
+.pytest_cache/
+
+# Local environments, caches and secrets
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+env/
+.streamlit/secrets.toml
