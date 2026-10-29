@@ -1234,33 +1234,39 @@ def get_week_challenges(start_date, end_date):
     if not isinstance(start_date, str): start_date = start_date.strftime("%Y-%m-%d")
     if not isinstance(end_date, str): end_date = end_date.strftime("%Y-%m-%d")
     
-    challenge_query = f"""
-        SELECT ChallengeId, Type FROM `{project_id}.ISE.Challenges`
-        WHERE StartDate <= @end_date AND EndDate >= @start_date ORDER BY Type
+    # One query for the week's challenges and each one's top 10 participants.
+    # Challenges without participants still return a single row with a NULL UserId.
+    query = f"""
+        SELECT c.ChallengeId, c.Type, m.UserId, m.Username, m.profile_image, m.Value
+        FROM `{project_id}.ISE.Challenges` c
+        LEFT JOIN (
+            SELECT cm.ChallengeId, cm.UserId, u.Username, u.ImageUrl AS profile_image, cm.Value
+            FROM `{project_id}.ISE.ChallengeMetrics` cm
+            JOIN `{project_id}.ISE.Users` u ON cm.UserId = u.UserId
+        ) m ON m.ChallengeId = c.ChallengeId
+        WHERE c.StartDate <= @end_date AND c.EndDate >= @start_date
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY c.ChallengeId ORDER BY m.Value DESC) <= 10
+        ORDER BY c.Type, m.Value DESC
     """
-    challenge_params = [
+    params = [
         bigquery.ScalarQueryParameter("start_date", "DATE", start_date),
         bigquery.ScalarQueryParameter("end_date", "DATE", end_date)
     ]
-    challenge_job_config = bigquery.QueryJobConfig(query_parameters=challenge_params)
-    challenges = [dict(row) for row in client.query(challenge_query, job_config=challenge_job_config).result()]
-    
+    job_config = bigquery.QueryJobConfig(query_parameters=params)
+    rows = client.query(query, job_config=job_config).result()
+
+    challenges = {}
+    for r in rows:
+        challenge = challenges.setdefault(r["ChallengeId"], {"Type": r["Type"], "participants": []})
+        if r["UserId"] is not None:
+            challenge["participants"].append({"user_id": r["UserId"], "username": r["Username"], "profile_image": r["profile_image"], "value": r["Value"]})
+
     if not challenges: return [[start_date, end_date], [[], [], []]]
-    
+
     challenge_data = [[], [], []]
-    for challenge in challenges:
-        metrics_query = f"""
-            SELECT cm.UserId, u.Username, u.ImageUrl AS profile_image, cm.Value
-            FROM `{project_id}.ISE.ChallengeMetrics` cm
-            JOIN `{project_id}.ISE.Users` u ON cm.UserId = u.UserId
-            WHERE cm.ChallengeId = @challenge_id ORDER BY cm.Value DESC LIMIT 10
-        """
-        metrics_params = [bigquery.ScalarQueryParameter("challenge_id", "STRING", challenge["ChallengeId"])]
-        metrics_job_config = bigquery.QueryJobConfig(query_parameters=metrics_params)
-        metrics_results = client.query(metrics_query, job_config=metrics_job_config).result()
-        
-        participants = [{"user_id": r["UserId"], "username": r["Username"], "profile_image": r["profile_image"], "value": r["Value"]} for r in metrics_results]
-        
+    for challenge in challenges.values():
+        participants = challenge["participants"]
+
         # --- FIX STARTS HERE ---
         # If no real participants are found, create a default leaderboard.
         if not participants:
@@ -1339,6 +1345,44 @@ def get_joined_challenge(challenge_id, user_id):
     job_config = bigquery.QueryJobConfig(query_parameters=params)
     results_list = list(client.query(query, job_config=job_config).result())
     return results_list[0]["count"] > 0 if results_list else False
+
+@st.cache_data(ttl=LONG_TTL, show_spinner=False)
+def get_week_challenge_ids(start_date, end_date):
+    """Returns {challenge type (lowercase): ChallengeId} for challenges with exactly these dates."""
+    client = _get_bigquery_client()
+    project_id = client.project
+
+    if not isinstance(start_date, str): start_date = start_date.strftime("%Y-%m-%d")
+    if not isinstance(end_date, str): end_date = end_date.strftime("%Y-%m-%d")
+
+    query = f"""
+        SELECT LOWER(Type) AS type, ChallengeId FROM `{project_id}.ISE.Challenges`
+        WHERE StartDate = @start_date AND EndDate = @end_date
+    """
+    params = [
+        bigquery.ScalarQueryParameter("start_date", "DATE", start_date),
+        bigquery.ScalarQueryParameter("end_date", "DATE", end_date)
+    ]
+    job_config = bigquery.QueryJobConfig(query_parameters=params)
+    return {row["type"]: row["ChallengeId"] for row in client.query(query, job_config=job_config).result()}
+
+def get_joined_challenges(challenge_ids, user_id):
+    """Returns the subset of challenge_ids the user has joined, using a single query."""
+    if not challenge_ids: return set()
+
+    client = _get_bigquery_client()
+    project_id = client.project
+
+    query = f"""
+        SELECT DISTINCT ChallengeId FROM `{project_id}.ISE.ChallengeParticipants`
+        WHERE ChallengeId IN UNNEST(@challenge_ids) AND UserId = @user_id
+    """
+    params = [
+        bigquery.ArrayQueryParameter("challenge_ids", "STRING", list(challenge_ids)),
+        bigquery.ScalarQueryParameter("user_id", "STRING", user_id)
+    ]
+    job_config = bigquery.QueryJobConfig(query_parameters=params)
+    return {row["ChallengeId"] for row in client.query(query, job_config=job_config).result()}
 
 def join_challenge(challenge_id, user_id):
     if get_joined_challenge(challenge_id, user_id): return False

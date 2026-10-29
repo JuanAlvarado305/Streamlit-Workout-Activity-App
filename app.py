@@ -11,7 +11,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 import datetime
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_user_sensor_data, challenge_page, display_challenge
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_challenge_id, get_joined_challenge, join_challenge, get_latest_two_challenges, get_challenge_participant_counts
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friends_posts, get_week_challenges, get_week_challenge_ids, get_joined_challenges, join_challenge, get_latest_two_challenges, get_challenge_participant_counts
 from pages.Activity_Page import activity_page # Import function instead of module
 from pages.hidden.login import login_page  # Import the login page function
 from pages.hidden.register import register_page
@@ -257,9 +257,22 @@ def challenge_components():
     
     st.header(f"New Weekly Challenges {start_str} - {end_str}")
     
-    distance_challenge_id = get_challenge_id(start_of_week, end_of_week, "Distance")
-    steps_challenge_id = get_challenge_id(start_of_week, end_of_week, "Steps")
-    workouts_challenge_id = get_challenge_id(start_of_week, end_of_week, "Workouts")
+    challenge_ids = get_week_challenge_ids(start_of_week, end_of_week)
+    distance_challenge_id = challenge_ids.get("distance")
+    steps_challenge_id = challenge_ids.get("steps")
+    workouts_challenge_id = challenge_ids.get("workouts")
+
+    # Look up joined status for all three challenges in one query (once per session)
+    joined_keys = {
+        "distance_joined": distance_challenge_id,
+        "steps_joined": steps_challenge_id,
+        "workouts_joined": workouts_challenge_id,
+    }
+    if any(key not in st.session_state for key in joined_keys):
+        joined = get_joined_challenges([cid for cid in joined_keys.values() if cid], user_id)
+        for key, cid in joined_keys.items():
+            if key not in st.session_state:
+                st.session_state[key] = cid in joined
     
     # Get participant counts for each challenge
     current_participant_counts = get_challenge_participant_counts()
@@ -271,10 +284,6 @@ def challenge_components():
     cols = st.columns(3)
     
     with cols[0]:
-        # Initialize session state if it doesn't exist
-        if "distance_joined" not in st.session_state:
-            st.session_state["distance_joined"] = get_joined_challenge(distance_challenge_id, user_id) if distance_challenge_id else False
-
         st.write(f"Distance Challenge | {distance_count} participants")
 
         if st.session_state["distance_joined"]:
@@ -286,17 +295,13 @@ def challenge_components():
                     if success:
                         st.success("Successfully joined Distance Challenge!")
                         st.session_state["distance_joined"] = True  # Update session state
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("Could not join challenge. Try again.")
                 else:
                     st.error("Challenge not available yet")
     
     with cols[1]:
-        # Initialize session state for steps_joined
-        if "steps_joined" not in st.session_state:
-            st.session_state["steps_joined"] = get_joined_challenge(steps_challenge_id, user_id) if steps_challenge_id else False
-
         st.write(f"Steps Challenge | {steps_count} participants")
 
         if st.session_state["steps_joined"]:
@@ -308,16 +313,13 @@ def challenge_components():
                     if success:
                         st.success("Successfully joined Steps Challenge!")
                         st.session_state["steps_joined"] = True  # Update the session state flag
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("Could not join challenge. Try again.")
                 else:
                     st.error("Challenge not available yet")
     
     with cols[2]:
-        if "workouts_joined" not in st.session_state:
-            st.session_state["workouts_joined"] = get_joined_challenge(workouts_challenge_id, user_id) if workouts_challenge_id else False
-
         st.write(f"Workouts Challenge | {workouts_count} participants")
         if st.session_state["workouts_joined"]:
             st.button("Joined", key="workouts_joined_disabled", disabled=True)  # Use a different key
@@ -328,7 +330,7 @@ def challenge_components():
                     if success:
                         st.success("Successfully joined Workouts Challenge!")
                         st.session_state["workouts_joined"] = True
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("Could not join challenge. Try again.")
                 else:

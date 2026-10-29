@@ -20,7 +20,9 @@ from data_fetcher import (
     hash_password,
     login_user,
     register_user,
-    get_current_week_challenges
+    get_current_week_challenges,
+    get_week_challenges,
+    get_joined_challenges
 )
 
 # Create fake credentials for authentication patching
@@ -425,6 +427,58 @@ class TestGetCurrentWeekChallenges(CacheClearingTestCase):
         with self.assertRaises(Exception):
             _ = get_current_week_challenges()
         mock_week.assert_called_once()
+
+class TestGetWeekChallenges(CacheClearingTestCase):
+    """Tests get_week_challenges, which loads challenges and leaderboards in one query."""
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_groups_rows_by_challenge(self, mock_client_class):
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [
+            {"ChallengeId": "c1", "Type": "Distance", "UserId": "u1", "Username": "alice", "profile_image": None, "Value": 10.0},
+            {"ChallengeId": "c1", "Type": "Distance", "UserId": "u2", "Username": "bob", "profile_image": None, "Value": 7.5},
+            {"ChallengeId": "c2", "Type": "Steps", "UserId": None, "Username": None, "profile_image": None, "Value": None},
+        ]
+        mock_client.query.return_value = mock_query_job
+        mock_client_class.return_value = mock_client
+
+        dates, (distance, steps, workouts) = get_week_challenges("2025-04-14", "2025-04-20")
+
+        mock_client.query.assert_called_once()
+        self.assertEqual(dates, ["2025-04-14", "2025-04-20"])
+        self.assertEqual([p["username"] for p in distance], ["alice", "bob"])
+        # A challenge with no participants falls back to the default leaderboard
+        self.assertEqual(steps[0]["username"], "AlexTheWinner")
+        self.assertEqual(steps[0]["value"], 65400)
+        self.assertEqual(workouts, [])
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_no_challenges(self, mock_client_class):
+        mock_client = MagicMock()
+        mock_client.query.return_value.result.return_value = []
+        mock_client_class.return_value = mock_client
+
+        self.assertEqual(get_week_challenges("2025-04-14", "2025-04-20"),
+                         [["2025-04-14", "2025-04-20"], [[], [], []]])
+
+
+class TestGetJoinedChallenges(CacheClearingTestCase):
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_returns_joined_ids(self, mock_client_class):
+        mock_client = MagicMock()
+        mock_client.query.return_value.result.return_value = [{"ChallengeId": "c2"}]
+        mock_client_class.return_value = mock_client
+
+        self.assertEqual(get_joined_challenges(["c1", "c2", "c3"], "user1"), {"c2"})
+        mock_client.query.assert_called_once()
+
+    @patch("data_fetcher.bigquery.Client")
+    def test_no_ids_skips_query(self, mock_client_class):
+        self.assertEqual(get_joined_challenges([], "user1"), set())
+        mock_client_class.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
