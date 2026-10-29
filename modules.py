@@ -32,10 +32,14 @@ def display_post(post, get_user_data=get_user_profile):
     """Displays a user post with an improved layout in Streamlit.
     This function was created with the help of ChatGPT and Gemini.
     """
-    # Get User Data
-    userData = get_user_data(post['AuthorId'])
-    username = userData['username']
-    user_image = userData['profile_image']
+    # Get User Data (feed queries include the author's details; otherwise look them up)
+    if 'AuthorUsername' in post:
+        username = post['AuthorUsername']
+        user_image = post['AuthorImage']
+    else:
+        userData = get_user_data(post['AuthorId'])
+        username = userData['username']
+        user_image = userData['profile_image']
     timestamp = post['Timestamp']
     content = post['Content']
     post_image = post['ImageUrl']

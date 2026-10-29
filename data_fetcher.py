@@ -1052,15 +1052,20 @@ def get_user_posts(user_id):
     return posts
 
 @st.cache_data(ttl=SHORT_TTL, show_spinner=False)
-def get_friends_posts(user_id):
-    """Returns a list of posts from the user's friends from your database."""
+def get_friends_posts(user_id, limit=None):
+    """Returns a list of posts from the user's friends from your database.
+
+    Each post includes AuthorUsername and AuthorImage so callers can render it
+    without a separate profile lookup per post.
+    """
     client = _get_bigquery_client() # <-- Change: Use the helper function
     project_id = client.project # <-- Change: Get project ID dynamically
-    
+
     query = f"""
         SELECT
             p.PostId AS PostId, p.AuthorId AS AuthorId, p.Timestamp AS Timestamp,
-            p.ImageUrl AS ImageUrl, p.Content AS Content, u.Name AS Username
+            p.ImageUrl AS ImageUrl, p.Content AS Content, u.Name AS Username,
+            u.Username AS AuthorUsername, u.ImageUrl AS AuthorImage
         FROM `{project_id}.ISE.Posts` AS p
         JOIN `{project_id}.ISE.Users` AS u ON p.AuthorId = u.UserId
         JOIN (
@@ -1069,10 +1074,12 @@ def get_friends_posts(user_id):
             SELECT UserId1 AS FriendId FROM `{project_id}.ISE.Friends` WHERE UserId2 = @user_id
         ) AS friends ON p.AuthorId = friends.FriendId
         ORDER BY p.Timestamp DESC
+        {"LIMIT @limit" if limit else ""}
     """
-    query_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)]
-    )
+    params = [bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)]
+    if limit:
+        params.append(bigquery.ScalarQueryParameter('limit', 'INT64', limit))
+    query_config = bigquery.QueryJobConfig(query_parameters=params)
     query_job = client.query(query, job_config=query_config)
     return [dict(row) for row in query_job.result()]
 

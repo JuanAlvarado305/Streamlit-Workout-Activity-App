@@ -107,6 +107,33 @@ class TestDisplayPost(unittest.TestCase):
 
             mock_image.assert_not_called()
 
+    def test_display_post_uses_inline_author(self):
+        """Tests that display_post skips the profile lookup when the post carries author details."""
+        get_user_data = MagicMock()
+        post = {
+            "PostId": "post1",
+            "AuthorId": "user1",
+            "AuthorUsername": "inline_user",
+            "AuthorImage": "https://picsum.photos/40/40",
+            "Timestamp": datetime.strptime("2024-03-15 12:00:00", "%Y-%m-%d %H:%M:%S"),
+            "Content": "Feed post.",
+            "ImageUrl": None
+        }
+
+        with patch("streamlit.container"), \
+             patch("streamlit.columns") as mock_columns, \
+             patch("streamlit.markdown") as mock_markdown:
+
+            mock_columns.return_value = (MagicMock(), MagicMock())
+
+            display_post(post, get_user_data=get_user_data)
+
+            get_user_data.assert_not_called()
+            mock_markdown.assert_any_call(
+                f'<img src="{post["AuthorImage"]}" class="profile-pic">',
+                unsafe_allow_html=True
+            )
+
 
 # ---------------------------
 # Tests for display_activity_summary

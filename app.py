@@ -96,7 +96,8 @@ def display_home_page():
     # Display first 10 posts from the user's friends ordered by timestamp
     st.header("What your friends are up to...")
     try:
-        friends_posts = get_friends_posts(userId) #list of a user's posts
+        # Fetch one extra post so we know whether there are more than 10
+        friends_posts = get_friends_posts(userId, limit=11)
 
         if not friends_posts:
             st.info("No posts from your friends to show right now. Connect with more friends or encourage them to post!")
