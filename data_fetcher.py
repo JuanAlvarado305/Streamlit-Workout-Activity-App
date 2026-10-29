@@ -783,8 +783,11 @@ import hashlib
 import json
 from google.cloud import bigquery
 from google.oauth2 import service_account # <-- Change: Added for service account credentials
-import vertexai # <-- Change: Added to top-level imports
-from vertexai.generative_models import GenerativeModel, GenerationConfig # <-- Change: Added to top-level imports
+
+# Cache lifetimes (seconds) for read-only queries. Streamlit reruns the whole
+# script on every interaction, so without caching each click re-ran every query.
+SHORT_TTL = 5 * 60
+LONG_TTL = 60 * 60
 
 # --- New Helper Function for Secure BigQuery Connection ---
 # data_fetcher.py
@@ -834,14 +837,16 @@ from google.oauth2 import service_account
 #         print("!!! [DEBUG] No credentials found in environment variables or Streamlit secrets.")
 #         raise Exception("Google Cloud credentials not found.")
 
+@st.cache_resource(show_spinner=False)
 def _get_bigquery_client():
     """
-    Creates and returns a BigQuery client.
+    Creates and returns a BigQuery client, shared by the whole process.
     - On Google Cloud, it automatically uses the environment's service account permissions.
     - Locally, it automatically uses the GOOGLE_APPLICATION_CREDENTIALS from your .env file.
     """
     return bigquery.Client()
 
+@st.cache_data(ttl=LONG_TTL, show_spinner=False)
 def get_user_sensor_data(user_id, workout_id):
     """
     Returns a list of timestamped sensor data from your BigQuery project.
@@ -913,33 +918,31 @@ def generate_password_reset_token(email):
 
 def get_user_workouts(user_id):
     """Returns a list of user's workouts from your database."""
-    client = _get_bigquery_client() # <-- Change: Use the helper function
-    project_id = client.project # <-- Change: Get project ID dynamically
-    
     try:
-        query = f"""
-            SELECT *
-            FROM `{project_id}.ISE.Workouts`
-            WHERE UserId = @user_id
-            ORDER BY StartTimestamp DESC
-        """
-        query_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
-            ]
-        )
-        query_job = client.query(query, job_config=query_config)
-        workouts = [dict(row) for row in query_job.result()]
-        
-        # This fallback is useful if your new database is empty
-        if workouts:
-            return workouts
-        else:
-            return [] # Return empty list if no workouts, can be handled in UI
-            
+        return _query_user_workouts(user_id)
     except Exception as e:
         print(f"Error fetching workouts from database: {e}")
         return []
+
+@st.cache_data(ttl=SHORT_TTL, show_spinner=False)
+def _query_user_workouts(user_id):
+    # Kept separate from get_user_workouts so a failed query raises here and
+    # is not cached as an empty list.
+    client = _get_bigquery_client()
+    project_id = client.project
+    query = f"""
+        SELECT *
+        FROM `{project_id}.ISE.Workouts`
+        WHERE UserId = @user_id
+        ORDER BY StartTimestamp DESC
+    """
+    query_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter('user_id', 'STRING', user_id)
+        ]
+    )
+    query_job = client.query(query, job_config=query_config)
+    return [dict(row) for row in query_job.result()]
     
 
 # data_fetcher.py
@@ -1000,6 +1003,7 @@ def update_password_with_token(token, new_password):
 
     return "Your password has been reset successfully! You can now log in."
 
+@st.cache_data(ttl=SHORT_TTL, show_spinner=False)
 def get_user_profile(user_id):
     """Returns information about the given user from your database."""
     client = _get_bigquery_client() # <-- Change: Use the helper function
@@ -1026,6 +1030,7 @@ def get_user_profile(user_id):
     return dict(results[0]) if results else {}
 
 
+@st.cache_data(ttl=SHORT_TTL, show_spinner=False)
 def get_user_posts(user_id):
     """Returns a list of a user's posts from your database."""
     client = _get_bigquery_client() # <-- Change: Use the helper function
@@ -1046,6 +1051,7 @@ def get_user_posts(user_id):
         post['user_id'] = post.pop('user_id_alias', None)
     return posts
 
+@st.cache_data(ttl=SHORT_TTL, show_spinner=False)
 def get_friends_posts(user_id):
     """Returns a list of posts from the user's friends from your database."""
     client = _get_bigquery_client() # <-- Change: Use the helper function
@@ -1198,6 +1204,7 @@ def register_user(username, full_name, password, email):
     return "¡Successfully registered!"
 # --- All Challenge functions refactored ---
 
+@st.cache_data(ttl=LONG_TTL, show_spinner=False)
 def get_latest_two_challenges():
     client = _get_bigquery_client() # <-- Change: Use the helper function
     project_id = client.project # <-- Change: Get project ID dynamically
@@ -1208,6 +1215,7 @@ def get_latest_two_challenges():
 
 # data_fetcher.py
 
+@st.cache_data(ttl=SHORT_TTL, show_spinner=False)
 def get_week_challenges(start_date, end_date):
     """
     Returns data for weekly challenges. If a challenge has no real participants,
@@ -1343,11 +1351,13 @@ def join_challenge(challenge_id, user_id):
     
     try:
         client.query(query, job_config=job_config).result()
+        get_challenge_participant_counts.clear()
         return True
     except Exception as e:
         print(f"Error joining challenge: {e}")
         return False
 
+@st.cache_data(ttl=SHORT_TTL, show_spinner=False)
 def get_challenge_participant_counts():
     client = _get_bigquery_client() # <-- Change: Use the helper function
     project_id = client.project # <-- Change: Get project ID dynamically

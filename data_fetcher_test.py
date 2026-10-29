@@ -10,6 +10,7 @@ import unittest
 import hashlib
 import uuid
 from unittest.mock import patch, MagicMock
+import streamlit as st
 from data_fetcher import (
     get_user_posts,
     get_genai_advice,
@@ -26,7 +27,14 @@ from data_fetcher import (
 fake_credentials = MagicMock()
 fake_credentials.universe_domain = "googleapis.com"
 
-class TestGetUserWorkouts(unittest.TestCase):
+class CacheClearingTestCase(unittest.TestCase):
+    """Clears Streamlit caches so mocked clients and results don't leak between tests."""
+
+    def setUp(self):
+        st.cache_data.clear()
+        st.cache_resource.clear()
+
+class TestGetUserWorkouts(CacheClearingTestCase):
 
     @patch("data_fetcher.bigquery.Client")
     def test_get_user_workouts_success(self, mock_client_class):
@@ -79,7 +87,7 @@ class TestGetUserWorkouts(unittest.TestCase):
         self.assertEqual(result[1]["workout_id"], "workout2")  # From mock data
        
 
-class TestGetUserProfile(unittest.TestCase):
+class TestGetUserProfile(CacheClearingTestCase):
     """Tests the get_user_profile function."""
     
     @patch("data_fetcher.bigquery.Client")
@@ -131,7 +139,7 @@ class TestGetUserProfile(unittest.TestCase):
         self.assertEqual(result, {})
 
 
-class TestGetUserPosts(unittest.TestCase):
+class TestGetUserPosts(CacheClearingTestCase):
     """Tests the get_user_posts function."""
     
     @patch("data_fetcher.bigquery.Client")
@@ -181,7 +189,7 @@ class TestGetUserPosts(unittest.TestCase):
             get_user_posts("user1")
 
 
-class TestGetUserSensorData(unittest.TestCase):
+class TestGetUserSensorData(CacheClearingTestCase):
     """Tests the get_user_sensor_data function."""
     
     @patch("data_fetcher.bigquery.Client")
@@ -238,7 +246,7 @@ class TestGetUserSensorData(unittest.TestCase):
             get_user_sensor_data("user1", "workout1")
 
 
-class TestGetGenaiAdvice(unittest.TestCase):
+class TestGetGenaiAdvice(CacheClearingTestCase):
     """Tests the get_genai_advice function which uses Vertex AI and aggregated workout data."""
     
     @patch("google.auth.default", return_value=(fake_credentials, "fake-project"))
@@ -307,7 +315,7 @@ class TestGetGenaiAdvice(unittest.TestCase):
         self.assertIn("alicej", result["content"].lower())
         self.assertEqual(result["timestamp"], "2024-07-29 08:00:00")
 
-class TestAuthFunctions(unittest.TestCase):
+class TestAuthFunctions(CacheClearingTestCase):
 
     @patch("data_fetcher.bigquery.Client")
     def test_login_user_success(self, mock_client_class):
@@ -365,7 +373,7 @@ class TestAuthFunctions(unittest.TestCase):
         result = register_user("existinguser", "Existing User", "SomePass123")
         self.assertEqual(result, "That username is already in use.")
 
-class TestGetCurrentWeekChallenges(unittest.TestCase):
+class TestGetCurrentWeekChallenges(CacheClearingTestCase):
     """Tests for get_current_week_challenges(), mocking out its two dependencies."""
 
     @patch("data_fetcher.get_week_challenges")
