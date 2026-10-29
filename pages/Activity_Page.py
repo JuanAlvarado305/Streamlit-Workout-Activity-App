@@ -87,7 +87,6 @@ def activity_page():
     # --- Recent Workouts ---
     st.header("Recent Workouts")
     
-    user_workouts = get_user_workouts(userId)
     if user_workouts:
         display_recent_workouts(user_workouts)
     else:

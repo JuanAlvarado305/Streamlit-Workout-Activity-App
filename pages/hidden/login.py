@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 import json
 import requests
 from data_fetcher import login_user
@@ -57,14 +56,11 @@ def login_page():
                         st.error("Please enter both username and password")
                     else:
                         with st.spinner("Authenticating..."):
-                            time.sleep(0.5)
                             user = login_user(username, password)
                             
                             if user:
                                 st.session_state.authenticated = True
                                 st.session_state.user_id = user["UserId"]
-                                st.success("Login successful! Redirecting...")
-                                time.sleep(1)
                                 st.rerun()
                             else:
                                 if 'login_attempts' not in st.session_state:
@@ -86,15 +82,15 @@ def login_page():
                 st.rerun()
         # --- CHANGE ENDS HERE ---
 
+@st.cache_data(ttl=24 * 60 * 60, show_spinner=False)
 def load_lottieurl(url: str):
-    """Loads a Lottie animation from a URL."""
-    try:
-        r = requests.get(url)
-        if r.status_code != 200:
-            return None
-        return r.json()
-    except Exception:
-        return None
+    """Loads a Lottie animation from a URL, cached for a day.
+
+    Raises on failure so a failed download isn't cached; the caller skips the animation.
+    """
+    r = requests.get(url, timeout=3)
+    r.raise_for_status()
+    return r.json()
 
 if __name__ == "__main__":
     st.set_page_config(layout="wide", page_title="Spaghetti Crew Workout App - Login", initial_sidebar_state="collapsed")
