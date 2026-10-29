@@ -789,6 +789,9 @@ from google.oauth2 import service_account # <-- Change: Added for service accoun
 SHORT_TTL = 5 * 60
 LONG_TTL = 60 * 60
 
+# gemini-1.5-flash-001 has been retired; override with the GEMINI_MODEL env var.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
 # --- New Helper Function for Secure BigQuery Connection ---
 # data_fetcher.py
 
@@ -1119,8 +1122,9 @@ def get_user_daily_workout_data(user_id) -> dict:
         "calories": total_calories, "advice_timestamp": advice_timestamp
     }
 
+@st.cache_data(ttl=LONG_TTL, show_spinner=False)
 def get_genai_advice(user_id):
-    """Returns motivational advice from Vertex AI."""
+    """Returns motivational advice from Vertex AI, cached per user for an hour."""
     user_data = get_user_profile(user_id)
     username = user_data.get("username", "User")
     daily_data = get_user_daily_workout_data(user_id)
@@ -1133,10 +1137,15 @@ def get_genai_advice(user_id):
     fallback = f"Keep pushing forward, {username}—every step counts!"
     
     try:
+        # Imported here rather than at module level: vertexai takes ~2s to
+        # import, which slowed every cold start even when no advice was shown.
+        import vertexai
+        from vertexai.generative_models import GenerativeModel, GenerationConfig
+
         client = _get_bigquery_client() # <-- Change: Get client to find project ID
         vertexai.init(project=client.project, location="us-central1") # <-- Change: Removed hardcoded project
-        
-        model = GenerativeModel("gemini-1.5-flash-001")
+
+        model = GenerativeModel(GEMINI_MODEL)
         generation_config = GenerationConfig(
             response_mime_type="application/json",
             response_schema={"type": "array", "items": {"type": "string"}},
